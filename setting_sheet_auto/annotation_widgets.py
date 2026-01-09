@@ -23,21 +23,12 @@ def _create_color_combo(initial: str = "Yellow") -> QComboBox:
     if initial in DEFAULT_COLORS:
         combo.setCurrentText(initial)
 
+    # ✅ 최소 가독 폭/높이만 보장 (▼는 Qt 기본 렌더)
     combo.setMinimumWidth(120)
-    combo.setMaximumWidth(220)
     combo.setFixedHeight(28)
 
-    combo.setStyleSheet("""
-        QComboBox {
-            padding-right: 28px;
-        }
-        QComboBox::drop-down {
-            width: 28px;
-        }
-    """)
-
-
     return combo
+
 
 class AnnotationToolBar(QWidget):
     """
@@ -79,98 +70,90 @@ class AnnotationToolBar(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
-
-        # ─ 도구 선택 버튼(전하가 원하신 "버튼") ─
-        lbl_tool = QLabel("도구:")
-        layout.addWidget(lbl_tool)
-
-        self.btn_tool_shape = QPushButton("□")
-        self.btn_tool_shape.setCheckable(True)
-        self.btn_tool_shape.setToolTip("도형 도구")
-        self.btn_tool_shape.clicked.connect(self._use_shape_tool)
-        layout.addWidget(self.btn_tool_shape)
-
-        self.btn_tool_arrow = QPushButton("↔")
-        self.btn_tool_arrow.setCheckable(True)
-        self.btn_tool_arrow.setToolTip("화살표 도구")
-        self.btn_tool_arrow.clicked.connect(self._use_arrow_tool)
-        layout.addWidget(self.btn_tool_arrow)
-
-        self.btn_tool_text = QPushButton("T")
-        self.btn_tool_text.setCheckable(True)
-        self.btn_tool_text.setToolTip("텍스트 도구")
-        self.btn_tool_text.clicked.connect(self._use_text_tool)
-        layout.addWidget(self.btn_tool_text)
-
-        self.btn_tool_select = QPushButton("🖱")
-        self.btn_tool_select.setCheckable(True)
-        self.btn_tool_select.setToolTip("선택/이동 도구")
-        self.btn_tool_select.clicked.connect(self._use_select_tool)
-        layout.addWidget(self.btn_tool_select)
-
-        # 버튼 가독성/크기 고정
-        btn_font = self.btn_tool_shape.font()
-        btn_font.setPointSize(11)
-        btn_font.setBold(True)
-        for b in (self.btn_tool_shape, self.btn_tool_arrow, self.btn_tool_text, self.btn_tool_select):
-            b.setFont(btn_font)
-            b.setFixedSize(34, 28)
-            b.setFocusPolicy(Qt.NoFocus)
-
+    
+        # =========================
+        # 1) 도구 모드 버튼(실제로 보이게)
+        # =========================
+        layout.addWidget(QLabel("도구:"))
+    
+        self.btn_mode_shape = QPushButton("도형")
+        self.btn_mode_shape.setCheckable(True)
+        self.btn_mode_shape.clicked.connect(self._use_shape_tool)
+        self.btn_mode_shape.setFixedHeight(28)
+        self.btn_mode_shape.setMinimumWidth(54)
+        layout.addWidget(self.btn_mode_shape)
+    
+        self.btn_mode_arrow = QPushButton("화살표")
+        self.btn_mode_arrow.setCheckable(True)
+        self.btn_mode_arrow.clicked.connect(self._use_arrow_tool)
+        self.btn_mode_arrow.setFixedHeight(28)
+        self.btn_mode_arrow.setMinimumWidth(64)
+        layout.addWidget(self.btn_mode_arrow)
+    
+        self.btn_mode_text = QPushButton("텍스트")
+        self.btn_mode_text.setCheckable(True)
+        self.btn_mode_text.clicked.connect(self._use_text_tool)
+        self.btn_mode_text.setFixedHeight(28)
+        self.btn_mode_text.setMinimumWidth(64)
+        layout.addWidget(self.btn_mode_text)
+    
+        self.btn_mode_select = QPushButton("선택")
+        self.btn_mode_select.setCheckable(True)
+        self.btn_mode_select.clicked.connect(self._use_select_tool)
+        self.btn_mode_select.setFixedHeight(28)
+        self.btn_mode_select.setMinimumWidth(54)
+        layout.addWidget(self.btn_mode_select)
+    
         layout.addSpacing(10)
-
-        # ─ 도형 타입(Shape 도구일 때만 의미) ─
-        lbl_shape = QLabel("도형:")
-        layout.addWidget(lbl_shape)
-
+    
+        # =========================
+        # 2) 도형 타입(도형 모드에서 의미)
+        # =========================
+        layout.addWidget(QLabel("도형:"))
+    
         self.btn_rect = QPushButton("□")
         self.btn_rect.setCheckable(True)
-        self.btn_rect.setToolTip("사각형 도형")
         self.btn_rect.clicked.connect(lambda checked: self._select_shape(ShapeType.RECT))
+        self.btn_rect.setFixedSize(34, 28)
         layout.addWidget(self.btn_rect)
-
+    
         self.btn_circle = QPushButton("○")
         self.btn_circle.setCheckable(True)
-        self.btn_circle.setToolTip("원형 도형")
         self.btn_circle.clicked.connect(lambda checked: self._select_shape(ShapeType.CIRCLE))
+        self.btn_circle.setFixedSize(34, 28)
         layout.addWidget(self.btn_circle)
-
+    
         self.btn_datumL = QPushButton("L")
         self.btn_datumL.setCheckable(True)
-        self.btn_datumL.setToolTip("기준면 표시용 L 도형")
         self.btn_datumL.clicked.connect(lambda checked: self._select_shape(ShapeType.DATUM_L))
+        self.btn_datumL.setFixedSize(34, 28)
         layout.addWidget(self.btn_datumL)
-
-        for b in (self.btn_rect, self.btn_circle, self.btn_datumL):
-            b.setFont(btn_font)
-            b.setFixedSize(34, 28)
-            b.setFocusPolicy(Qt.NoFocus)
-
+    
         layout.addSpacing(10)
-
-        # ─ 선 두께 ─
+    
+        # =========================
+        # 3) 두께
+        # =========================
         layout.addWidget(QLabel("두께:"))
         self.spin_width = QDoubleSpinBox()
         self.spin_width.setRange(0.5, 10.0)
         self.spin_width.setSingleStep(0.5)
         self.spin_width.setValue(float(self.tool_state.stroke_width))
         self.spin_width.setFixedHeight(28)
-        self.spin_width.setMinimumWidth(80)
-        self.spin_width.setToolTip("도형/화살표 선 두께")
+        self.spin_width.setMinimumWidth(90)
         self.spin_width.valueChanged.connect(self._width_changed)
         layout.addWidget(self.spin_width)
-
+    
         layout.addSpacing(10)
-
-        # ─ 도형선 색상 ─
+    
+        # =========================
+        # 4) 색상(▼는 Qt 기본 렌더)
+        # =========================
         layout.addWidget(QLabel("도형선:"))
         self.combo_stroke = _create_color_combo(self.tool_state.stroke_color)
         self.combo_stroke.currentTextChanged.connect(self._stroke_color_changed)
         layout.addWidget(self.combo_stroke)
-
-        layout.addSpacing(6)
-
-        # ─ 채움 색상 ─
+    
         layout.addWidget(QLabel("채움:"))
         self.combo_fill = _create_color_combo(self.tool_state.fill_color or "Yellow")
         self.combo_fill.insertItem(0, "(없음)")
@@ -178,42 +161,33 @@ class AnnotationToolBar(QWidget):
             self.combo_fill.setCurrentIndex(0)
         self.combo_fill.currentTextChanged.connect(self._fill_color_changed)
         layout.addWidget(self.combo_fill)
-
-        layout.addSpacing(6)
-
-        # ─ 화살표 색상 ─
+    
         layout.addWidget(QLabel("화살표:"))
-        self.combo_arrow = _create_color_combo(self.tool_state.arrow_color)
+        self.combo_arrow = _create_color_combo(getattr(self.tool_state, "arrow_color", "Yellow"))
         self.combo_arrow.currentTextChanged.connect(self._arrow_color_changed)
         layout.addWidget(self.combo_arrow)
-
-        layout.addSpacing(6)
-
-        # ─ 텍스트 색상 ─
+    
         layout.addWidget(QLabel("텍스트:"))
-        self.combo_text = _create_color_combo(self.tool_state.text_color)
+        self.combo_text = _create_color_combo(getattr(self.tool_state, "text_color", "Yellow"))
         self.combo_text.currentTextChanged.connect(self._text_color_changed)
         layout.addWidget(self.combo_text)
-
-        layout.addSpacing(6)
-
-        # ─ 텍스트 크기 ─
+    
         layout.addWidget(QLabel("크기:"))
         self.spin_text = QSpinBox()
         self.spin_text.setRange(8, 200)
-        self.spin_text.setSingleStep(1)
-        self.spin_text.setValue(int(self.tool_state.text_size))
+        self.spin_text.setValue(int(getattr(self.tool_state, "text_size", 30)))
         self.spin_text.setFixedHeight(28)
         self.spin_text.setMinimumWidth(70)
         self.spin_text.valueChanged.connect(self._text_size_changed)
         layout.addWidget(self.spin_text)
-
+    
         layout.addStretch(1)
-
-        # 초기 상태 동기화
+    
+        # 초기 동기화
         self._sync_tool_buttons()
         self._sync_shape_buttons(self.tool_state.shape_type)
-
+    
+    
 
     # ─────────────────────
     # 내부: 버튼/스핀박스 → tool_state 반영
