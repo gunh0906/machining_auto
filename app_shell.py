@@ -7,7 +7,7 @@
 """
 
 from __future__ import annotations
-
+import os
 import sys
 from pathlib import Path
 
@@ -824,6 +824,17 @@ class ShellMainWindow(QMainWindow):
         """
         self._drag_pos = None
         super().mouseReleaseEvent(event)
+
+    def load_qss(app, qss_path: str):
+        """
+        외부 QSS 파일을 로드하여 QApplication에 적용한다.
+        - 파일이 없으면 무시
+        """
+        if not os.path.exists(qss_path):
+            return
+
+        with open(qss_path, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
 
 def apply_brand_light_theme(app: QApplication):
     """
