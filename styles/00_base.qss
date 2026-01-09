@@ -1,0 +1,31 @@
+/* 00_base.qss
+ * 목적: 전역 안전 기본(폰트/배경/디바이더/기본 테두리)
+ * 금지: QComboBox::down-arrow / QComboBox::drop-down / QSpinBox::up/down-button
+ */
+
+QMainWindow {
+    background: #F4F7FB;
+}
+
+QWidget {
+    color: #111827;
+    font-family: "Segoe UI", "Malgun Gothic";
+    font-size: 13px;
+}
+
+/* 1px Divider 공통: property 기반 */
+QWidget[divider="true"] {
+    background: #D7DCE6;
+}
+
+/* objectName 기반 Divider(이미 존재) */
+QWidget#TopBarMenuDivider,
+QWidget#TopBarBottomDivider,
+QWidget#ProjectDivider {
+    background: #D7DCE6;
+}
+
+/* ImageView 테두리(Setting 이미지 뷰) */
+QGraphicsView#ImageView {
+    border: 1px solid #000000;
+}

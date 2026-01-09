@@ -44,10 +44,11 @@ COLOR_CHOICES = [
 def create_color_combo(initial: str = "Red") -> QComboBox:
     """
     색상 아이콘 + 텍스트 콤보.
-    - ▼(드롭다운 화살표)가 환경/QSS에 의해 사라지는 문제를 방지하기 위해
-      down-arrow를 인라인 SVG로 명시합니다.
+    - 전역 QSS 충돌을 막기 위해, 인라인 QSS를 제거하고 objectName 스코프로만 스타일을 건다.
+    - (drop-down 폭/패딩은 20_inputs_safe.qss의 #ColorCombo로 제어)
     """
     combo = QComboBox()
+    combo.setObjectName("ColorCombo")
     combo.setIconSize(QSize(14, 14))
 
     for name in COLOR_CHOICES:
@@ -61,17 +62,10 @@ def create_color_combo(initial: str = "Red") -> QComboBox:
     # ✅ 폭 제한 제거(잘림 방지)
     combo.setMinimumWidth(120)
     combo.setMaximumWidth(200)
-    combo.setStyleSheet("""
-        QComboBox {
-            padding-right: 28px;
-        }
-        QComboBox::drop-down {
-            width: 28px;
-        }
-    """)
 
-
+    # ✅ 인라인 setStyleSheet 제거 (QSS 파일에서만 관리)
     return combo
+
 
 
 def apply_mono_font_safe(edit: QLineEdit, family: str = "Consolas", fallback_pt: int = 11):
@@ -102,15 +96,14 @@ def apply_mono_font_safe(edit: QLineEdit, family: str = "Consolas", fallback_pt:
 class ImageView(QGraphicsView):
     def __init__(self, scene: QGraphicsScene, parent=None):
         super().__init__(parent)
+        self.setObjectName("ImageView")
         self.setScene(scene)
 
         # ▶ 이미지 영역만 흰색 배경
         self.setBackgroundBrush(Qt.white)
 
-        # (선택) 이미지 영역 테두리
-        self.setStyleSheet(
-            "QGraphicsView { border: 1px solid black; }"
-        )
+        # ✅ 인라인 테두리 제거: 00_base.qss의 QGraphicsView#ImageView 로 처리
+        # self.setStyleSheet("QGraphicsView { border: 1px solid black; }")
 
         # 기존 설정
         self.setRenderHint(QPainter.Antialiasing, True)
@@ -118,7 +111,6 @@ class ImageView(QGraphicsView):
         self.setDragMode(QGraphicsView.NoDrag)
         self.setCursor(Qt.ArrowCursor)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-
 
 
     def resizeEvent(self, event):
@@ -563,7 +555,7 @@ class MainWindow(QMainWindow):
         # 구분선 (✅ 1px Divider: 프레임 라인이 아닌 배경색으로 그려 검정 잔상 제거)
         coord_sep = QWidget()
         coord_sep.setFixedHeight(1)
-        coord_sep.setStyleSheet("background:#D7DCE6;")
+        coord_sep.setStyleSheet("divider", "true")
         op_layout.addWidget(coord_sep)
 
         # 추가 좌표 영역

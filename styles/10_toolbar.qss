@@ -1,0 +1,70 @@
+/* 10_toolbar.qss
+ * 목적: Shell(TopBar/SideBar/버튼 Pill)만 안전하게
+ * 금지: QComboBox::down-arrow / QComboBox::drop-down
+ */
+
+QWidget#TopBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #F8FAFD, stop:1 #EDF2FA);
+}
+
+QWidget#SideBar,
+QWidget#SideLogoBox,
+QWidget#SideButtons {
+    background: #294392;
+}
+
+/* 사이드 아이콘 */
+QToolButton#SideIcon {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 0px;
+}
+QToolButton#SideIcon:hover {
+    background: rgba(255,255,255,0.10);
+}
+QToolButton#SideIcon:checked {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.22);
+}
+
+/* 닫기 버튼 */
+QPushButton#ClosePill {
+    background: #294392;
+    border: 1px solid #294392;
+    border-radius: 12px;
+
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+
+    color: #FFFFFF;
+    font-weight: 900;
+    padding: 0px;
+    text-align: center;
+}
+QPushButton#ClosePill:hover {
+    background: #1F347A;
+    border-color: #1F347A;
+}
+QPushButton#ClosePill:pressed {
+    background: #16285C;
+    border-color: #16285C;
+}
+
+/* ROTATE pill */
+QPushButton#RotatePill {
+    background: #EEF1F6;
+    border: 1px solid #D6DBE6;
+    border-radius: 12px;
+    padding: 6px 14px;
+    font-weight: 900;
+    color: #111827;
+}
+QPushButton#RotatePill[rotateOn="true"] {
+    background: #B91C1C;
+    border: 1px solid #B91C1C;
+    color: #FFFFFF;
+}

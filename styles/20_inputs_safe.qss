@@ -1,0 +1,26 @@
+/* 20_inputs_safe.qss
+ * 목적: 입력 위젯 공통(안전판)
+ * 금지: QComboBox::down-arrow
+ */
+
+QLineEdit, QTextEdit {
+    background: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+QComboBox {
+    background: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+    padding: 2px 8px;
+}
+
+/* Setting 색상 콤보 전용(로컬 스코프) */
+QComboBox#ColorCombo {
+    padding-right: 28px;
+}
+QComboBox#ColorCombo::drop-down {
+    width: 28px;
+}

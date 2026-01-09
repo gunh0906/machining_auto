@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 import os
+from machining_auto.common.qss_loader import load_qss_files
 import sys
 from pathlib import Path
 
@@ -836,19 +837,49 @@ class ShellMainWindow(QMainWindow):
         with open(qss_path, "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
 
-def apply_brand_light_theme(app: QApplication):
+# ===== [QSS Loader / Theme] =====
+def _read_text_safe(path: str) -> str:
     """
-    [복구 우선]
-    - 전역 QPushButton/QComboBox/QLineEdit에 min-height/padding 강제 금지
-    - objectName/속성 기반으로만 필요한 곳에 스타일 적용
-    - 팝업/드롭다운 가독성 명시
-    - TopControls 구분선만 추가
+    QSS 파일을 안전하게 읽어옵니다.
+    - 파일이 없거나 읽기 실패 시 빈 문자열 반환
     """
-    app.setStyle("Fusion")
-def apply_brand_light_theme(app: QApplication):
+    try:
+        if not os.path.exists(path):
+            return ""
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
+
+def load_qss_bundle(app: QApplication) -> None:
     """
-    [복구 우선]
-    ...
+    전역 QSS 적용 경로(단일화).
+    - styles 폴더의 QSS를 순서대로 합쳐 app.setStyleSheet 1회만 호출합니다.
+    """
+    base_dir = Path(__file__).resolve().parent
+    styles_dir = base_dir / "styles"
+
+    parts = [
+        styles_dir / "00_base.qss",
+        styles_dir / "10_toolbar.qss",
+        styles_dir / "20_inputs_safe.qss",
+        styles_dir / "90_experimental.qss",
+    ]
+
+    merged = []
+    for p in parts:
+        merged.append(_read_text_safe(str(p)))
+
+    app.setStyleSheet("\n\n".join([s for s in merged if s.strip()]))
+
+
+def apply_brand_light_theme(app: QApplication) -> None:
+    """
+    [전역 테마 단일 적용 지점]
+    - 전역 QSS는 파일로 분리(styles/*.qss)
+    - QComboBox ▼(down-arrow)는 QSS가 아닌 ProxyStyle로 직접 그려 QSS 충돌을 회피합니다.
+    - app.setStyleSheet 호출은 load_qss_bundle() 단 1회만 수행합니다.
     """
     app.setStyle("Fusion")
 
@@ -885,393 +916,8 @@ def apply_brand_light_theme(app: QApplication):
 
     app.setStyle(_ComboArrowProxyStyle(app.style()))
 
-    app.setStyleSheet(r"""
-
-        /* ===== Base (배경은 MainWindow만) ===== */
-        QMainWindow { background: #F4F7FB; }
-        QWidget {
-            color: #111827;
-            font-family: "Segoe UI", "Malgun Gothic";
-            font-size: 13px;
-        }
-
-        /* ===== Shell: TopBar / SideBar (기존 구조 유지) ===== */
-        QWidget#TopBar {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                        stop:0 #F8FAFD, stop:1 #EDF2FA);
-        }
-
-        /* ✅ 1px Divider 위젯 스타일(혹시 inline style 제거해도 유지되게) */
-        QWidget#TopBarMenuDivider,
-        QWidget#TopBarBottomDivider {
-            background: #D7DCE6;
-        }
-        /* Setting 프로젝트명 아래 구분선(TopBar와 동일한 Divider 방식) */
-        QWidget#ProjectDivider {
-            background: #D7DCE6;
-        }
-
-
-        QWidget#SideBar,
-        QWidget#SideLogoBox,
-        QWidget#SideBtnArea {
-            background: #294392;
-        }
-
-        QToolButton#SideIcon {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 16px;
-            padding: 0px;
-        }
-        QToolButton#SideIcon:hover { background: rgba(255,255,255,0.10); }
-        QToolButton#SideIcon:checked {
-            background: rgba(255,255,255,0.18);
-            border: 1px solid rgba(255,255,255,0.22);
-        }
-
-        /* X 버튼 (좌측 슬라이드 색상으로 통일, 눌림감 추가) */
-        QPushButton#ClosePill {
-            background: #294392;
-            border: 1px solid #294392;
-            border-radius: 12px;
-
-            min-width: 28px; min-height: 28px;
-            max-width: 28px; max-height: 28px;
-
-            color: #FFFFFF;
-            font-weight: 900;
-
-            padding: 0px;
-            text-align: center;
-        }
-        QPushButton#ClosePill:hover {
-            background: #1F347A;
-            border-color: #1F347A;
-        }
-        QPushButton#ClosePill:pressed {
-            background: #16285C;
-            border-color: #16285C;
-        }
-
-        /* 상단 메뉴(파일/설정/도움말) 아래 구분선 */
-        QFrame#TopBarMenuDivider {
-            background: #D7DCE6;
-            max-height: 1px;
-        }
-
-                                           
-        /* ROTATE pill */
-        QPushButton#RotatePill {
-            background: #EEF1F6;
-            border: 1px solid #D6DBE6;
-            border-radius: 12px;
-            padding: 6px 14px;
-            font-weight: 900;
-            color: #111827;
-        }
-        QPushButton#RotatePill[rotateOn="true"] {
-            background: #B91C1C;
-            border: 1px solid #B91C1C;
-            color: #FFFFFF;
-        }
-
-        /* ===== Cards (PanelLeft/Right만 카드화) ===== */
-        QGroupBox#PanelLeft,
-        QGroupBox#PanelRight {
-            background: #FFFFFF;
-            border: 1px solid #D7DCE6;
-            border-radius: 16px;
-        }
-                      
-
-        /* GroupBox 타이틀(겹침 방지 최소) */
-        QGroupBox {
-            margin-top: 14px;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            subcontrol-position: top left;
-            left: 12px;
-            top: 0px;
-            padding: 0 8px;
-            background: #FFFFFF;
-            color: #294392;
-            font-weight: 900;
-        }
-  
-        /* ===== TopControls 구분선(요구사항) ===== */
-        QWidget#TopControls {
-            background: transparent;
-        }
-
-        /* =========================================================
-        TopControls(프로젝트명/MODE 줄) 전용: 높이/간격 완전 동일화
-        - 목표: 프로젝트명 입력칸(QLineEdit) 높이를 MODE 버튼과 동일(28px)로 고정
-        - 입력 시 나타나는 파란 포커스 테두리 제거(이 줄만)
-        ========================================================= */
-
-        /* 프로젝트명 입력칸: 높이 고정 + 세로 패딩 최소화 */
-        QWidget#TopControls QLineEdit {
-            padding: 0px 10px;          /* ✅ 입력칸이 커 보이는 원인(세로 padding) 제거 */
-            min-height: 28px;
-            max-height: 28px;           /* ✅ 핵심: 상한까지 고정해야 버튼과 동일해짐 */
-        }
-
-        /* 포커스(입력 중) 파란 테두리 제거: 기본 테두리로 고정 */
-        QWidget#TopControls QLineEdit:focus {
-            border: 1px solid #D5DAE6;
-            outline: none;
-        }
-
-        /* MODE 버튼도 높이 고정(혹시 폰트/DPI로 흔들릴 때 대비) */
-        QWidget#TopControls QPushButton {
-            min-height: 28px;
-            max-height: 28px;
-        }
-
-        /* ===== ComboBox: ▼(down-arrow) 강제 표시 (Fusion/QSS 환경에서도 항상 보이게) ===== */
-        QComboBox {
-            padding-right: 22px;      /* ▼ 영역 확보 */
-        }
-        QComboBox::drop-down {
-            subcontrol-origin: padding;
-            subcontrol-position: top right;
-            width: 22px;
-            border-left: 0px;
-        }
-                      
-        /* ===== Inputs (전역은 '색/테두리'만, 크기 강제 금지) ===== */
-        QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox {
-            background: #FFFFFF;
-            border: 1px solid #D5DAE6;
-            border-radius: 12px;
-        }
-        QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus,
-        QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {
-            border: 1px solid #294392;
-        }
-        /* 콤보박스 드롭다운 버튼 영역까지 라운드 통일 */
-        QComboBox::drop-down {
-            subcontrol-origin: padding;
-            subcontrol-position: top right;
-            width: 22px;
-            border-left: 1px solid #D5DAE6;
-            border-top-right-radius: 12px;
-            border-bottom-right-radius: 12px;
-            background: transparent;
-        }
-
-        /* 콤보 팝업 리스트도 라운드(드롭다운 가독성 유지) */
-        QAbstractItemView {
-            border: 1px solid #D5DAE6;
-            border-radius: 12px;
-            padding: 4px;
-        }
-
-        /* 콤보 드롭다운/리스트 가독성 */
-        QAbstractItemView {
-            background: #FFFFFF;
-            color: #111827;
-            selection-background-color: #DBEAFE;
-            selection-color: #111827;
-            outline: none;
-        }
-
-        /* ===== Buttons (전역은 '색/테두리'만, padding/min-height 강제 금지) ===== */
-        QPushButton {
-            background: #EEF1F6;
-            border: 1px solid #D6DBE6;
-            border-radius: 12px;
-            color: #111827;
-            font-weight: 800;
-        }
-        QPushButton:checked {
-            background: #294392;
-            border: 1px solid #294392;
-            color: #FFFFFF;
-        }
-
-        /* 도형 버튼: 기본 상태부터 남색 + 중앙정렬 + 라운드 사각형 */
-        QPushButton[toolButton="true"] {
-            background: #294392;
-            border: 1px solid #294392;
-            border-radius: 10px;
-
-            color: #FFFFFF;
-            font-weight: 900;
-            font-size: 16px;
-
-            /* ✅ 글리프가 위/아래로 떠 보이는 현상 보정 */
-            padding: 0px;
-            text-align: center;
-
-            /* ✅ 동그라미 방지 + “작다” 불만 해소 */
-            min-width: 36px;
-            min-height: 30px;
-        }
-        QPushButton[toolButton="true"]:hover {
-            background: #1F347A;
-            border-color: #1F347A;
-        }
-        QPushButton[toolButton="true"]:pressed {
-            background: #16285C;
-            border-color: #16285C;
-        }
-        QPushButton[toolButton="true"]:checked {
-            background: #111E4D; /* 체크(선택) 상태는 더 진하게 */
-            border-color: #111E4D;
-            color: #FFFFFF;
-        }
-
-        /* + 버튼: 기본 상태부터 남색(좌측 슬라이드와 통일), 라운드 사각형, 크게 */
-        QAbstractButton#addCoordButton,
-        QAbstractButton#addOuterButton,
-        QAbstractButton#addZButton {
-            background-color: #294392;
-            color: #FFFFFF;
-
-            border: 1px solid #294392;
-            border-radius: 10px;
-
-            font-family: "Malgun Gothic", "Segoe UI";
-            font-size: 18px;
-            font-weight: 900;
-
-            /* ✅ “너무 작다” + “가운데가 아니다” 해결: 크기 상향 */
-            min-width: 36px;
-            min-height: 30px;
-            max-width: 36px;
-            max-height: 30px;
-
-            padding: 0px;
-            text-align: center;
-        }
-        QAbstractButton#addCoordButton:hover,
-        QAbstractButton#addOuterButton:hover,
-        QAbstractButton#addZButton:hover {
-            background-color: #1F347A;
-            border-color: #1F347A;
-        }
-        QAbstractButton#addCoordButton:pressed,
-        QAbstractButton#addOuterButton:pressed,
-        QAbstractButton#addZButton:pressed {
-            background-color: #16285C;   /* ✅ 눌림감 */
-            border-color: #16285C;
-        }
-        QAbstractButton#addCoordButton:focus,
-        QAbstractButton#addOuterButton:focus,
-        QAbstractButton#addZButton:focus {
-            outline: none;
-        }
-
-        /* MODE(ON/OFF) 버튼: 좌측 슬라이드 색상 통일 */
-        QPushButton#ModeOnButton, QPushButton#ModeOffButton {
-            background: #294392;
-            border: 1px solid #294392;
-            color: #FFFFFF;
-            border-radius: 12px;
-            font-weight: 900;
-            padding: 6px 14px;
-            text-align: center;
-        }
-        QPushButton#ModeOnButton:hover, QPushButton#ModeOffButton:hover {
-            background: #1F347A;
-            border-color: #1F347A;
-        }
-        QPushButton#ModeOnButton:pressed, QPushButton#ModeOffButton:pressed {
-            background: #16285C;
-            border-color: #16285C;
-        }
-
-        /* ===== 상단 입력/콤보/핵심 버튼: 라운드 통일(이미지뷰 제외) ===== */
-
-        /* 프로젝트명/좌표 입력 등: 라운드 + 적당한 패딩 */
-        QLineEdit, QTextEdit, QPlainTextEdit {
-            border-radius: 12px;
-            padding: 6px 10px;
-        }
-
-        /* 설비명/가로세로 콤보: 라운드 + 패딩 */
-        QComboBox {
-            border-radius: 12px;
-            padding: 6px 10px;
-        }
-
-        /* PDF 생성/초기화/이미지 불러오기: 같은 모양/크기/라운드 */
-        QPushButton#PdfButton,
-        QPushButton#ResetButton,
-        QPushButton#LoadImageButton {
-            border-radius: 12px;
-            min-height: 28px;
-            max-height: 28px;
-            padding: 0px 14px;       /* MODE 버튼과 동일한 눌림/밀도감 */
-            font-weight: 900;
-            text-align: center;
-        }
-
-        /* PDF 버튼은 강조색 */
-        QPushButton#PdfButton {
-            background: #294392;
-            border: 1px solid #294392;
-            color: #FFFFFF;
-        }
-        QPushButton#PdfButton:hover {
-            background: #1F347A;
-            border-color: #1F347A;
-        }
-        QPushButton#PdfButton:pressed {
-            background: #16285C;
-            border-color: #16285C;
-        }
-                                    
-        /* ===== TopBar: 메뉴바(파일/설정/도움말) 높이/정렬 고정 ===== */
-        QWidget#TopBar QMenuBar {
-            background: transparent;
-            border: none;
-            margin: 0px;
-            padding: 0px;
-
-            /* ✅ 메뉴바가 “위로 들러붙어” TopBar 세로를 키우는 현상 방지 */
-            min-height: 28px;
-            max-height: 28px;
-        }
-
-        QWidget#TopBar QMenuBar::item {
-            background: transparent;
-            color: #111827;
-
-            /* ✅ 세로를 키우는 주범(상하 패딩) 제거 → X 버튼 클리핑 완화 */
-            padding: 0px 10px;
-
-            min-height: 28px;
-            max-height: 28px;
-
-            margin: 0px 2px;
-            border-radius: 10px;
-            font-weight: 800;
-        }
-        QWidget#TopBar QMenuBar::item:selected {
-            background: rgba(43, 66, 146, 0.12);
-        }
-        QWidget#TopBar QMenuBar::item:pressed {
-            background: rgba(43, 66, 146, 0.18);
-        }
-
-        /* 메뉴/팝업 가독성 */
-        QMenu {
-            background: #FFFFFF;
-            color: #111827;
-            border: 1px solid #D7DCE6;
-        }
-        QMenu::item { padding: 6px 14px; }
-        QMenu::item:selected { background: #DBEAFE; }
-
-        QDialog, QMessageBox {
-            background: #FFFFFF;
-            color: #111827;
-        }
-    """)
+    # ✅ 전역 QSS는 외부 파일에서만 로드
+    load_qss_bundle(app)
 
 
 
