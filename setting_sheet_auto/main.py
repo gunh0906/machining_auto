@@ -785,24 +785,13 @@ class MainWindow(QMainWindow):
 
         # ✅ PDF 레이아웃 선택(세로/가로) - A4 프레임 안쪽, 오른쪽 끝
         self.combo_pdf_layout = QComboBox()
+        self.combo_pdf_layout.setObjectName("PdfLayoutCombo")  # ✅ QSS 타겟팅용
         self.combo_pdf_layout.addItems(["세로", "가로"])
 
         # ❌ self.combo_pdf_layout.setFixedWidth(80)
         # ✅ 드롭다운/텍스트가 잘리지 않도록 최소 폭 확보
         self.combo_pdf_layout.setMinimumWidth(90)
         self.combo_pdf_layout.setMaximumWidth(140)
-
-        # ✅ ▼ 영역 확보
-        self.combo_pdf_layout.setStyleSheet("""
-            QComboBox {
-                padding-right: 18px;
-            }
-            QComboBox::drop-down {
-                width: 18px;
-                border-left: 0px;
-            }
-        """)
-
         self.combo_pdf_layout.setToolTip("PDF 출력 레이아웃을 선택합니다.")
         img_top_layout.addWidget(self.combo_pdf_layout)
         right_layout.addWidget(img_top)

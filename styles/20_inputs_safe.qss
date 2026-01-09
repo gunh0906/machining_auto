@@ -128,3 +128,62 @@ QComboBox#TopBarMachineCombo::drop-down {
     border: none;
     width: 22px;
 }
+/* =================================================
+ * CENTER 버튼 기준 pill 규격 (이미 존재)
+ * QPushButton#ModePill
+ * ================================================= */
+
+/* =================================================
+ * PDF 생성 버튼
+ * - CENTER 버튼과 크기/모양 완전 동일
+ * - 색상만 빨강 계통
+ * ================================================= */
+
+QPushButton#PdfButton {
+    /* ===== 모양/크기: CENTER 버튼과 동일 ===== */
+    border-radius: 8px;
+    padding: 4px 10px;
+    min-height: 0px;
+
+    font-weight: 900;
+    text-align: center;
+
+    /* ===== 색상만 빨강 ===== */
+    background: #B91C1C;
+    border: 1px solid #B91C1C;
+    color: #FFFFFF;
+}
+
+QPushButton#PdfButton:hover {
+    background: #991B1B;
+    border-color: #991B1B;
+}
+
+QPushButton#PdfButton:pressed {
+    background: #7F1D1D;
+    border-color: #7F1D1D;
+}
+/* =================================================
+ * PDF 레이아웃 콤보박스(세로/가로)
+ * - PdfButton / ModePill 과 동일 크기·모양
+ * - ▼(역삼각형) 표시를 위해 drop-down 폭 + padding-right 확보
+ * - 색상 변경 없음(기본 입력 스타일과 동일 톤)
+ * ================================================= */
+
+QComboBox#PdfLayoutCombo {
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+
+    /* ✅ PdfButton(센터 pill)과 동일 높이감 */
+    padding: 4px 28px 4px 10px;   /* right는 ▼ 공간 확보 */
+    min-height: 8px;
+
+    background: #FFFFFF;
+    color: #111827;
+    font-weight: 900;
+}
+
+QComboBox#PdfLayoutCombo::drop-down {
+    width: 18px;     /* ✅ ▼가 그려질 영역 */
+    border: 0px;
+}
