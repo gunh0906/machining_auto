@@ -368,6 +368,7 @@ class MainWindow(QMainWindow):
         lbl_project.setStyleSheet("font-weight: bold;")  # ✅ 프로젝트명 라벨 굵게
 
         self.edit_project = QLineEdit()
+        self.edit_project.setObjectName("ProjectNameInput")  # ✅ 프로젝트명 입력칸 타겟팅용
         self.edit_project.setPlaceholderText("예: 작번 / 프로젝트 명")
         
         line1_layout.addWidget(lbl_project)

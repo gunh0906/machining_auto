@@ -13,6 +13,21 @@ QWidget#SideLogoBox,
 QWidget#SideButtons {
     background: #2B4292;
 }
+/* -------------------------------------------------
+ * TopBar 설비명 콤보(로테이트 왼쪽)만 국지 정합
+ * - 색상 변경 금지: 배경/글자/테두리 색상은 건드리지 않음
+ * - 크기만: padding / radius / min-height 조정
+ * ------------------------------------------------- */
+QComboBox#TopBarMachineCombo {
+    border-radius: 8px;     /* 입력칸/버튼과 동일 톤 */
+    padding: 4px 10px;      /* ✅ 세로 높이감 핵심 */
+    min-height: 0px;        /* ✅ 강제 높이 금지 */
+}
+
+QComboBox#TopBarMachineCombo::drop-down {
+    border: none;
+    width: 22px;            /* 표시 영역만 확보(화살표는 ProxyStyle이 그림) */
+}
 
 /* 사이드 아이콘 */
 QToolButton#SideIcon {
@@ -21,15 +36,17 @@ QToolButton#SideIcon {
     border-radius: 16px;
     padding: 0px;
 }
+
 QToolButton#SideIcon:hover {
     background: rgba(255,255,255,0.10);
 }
+
 QToolButton#SideIcon:checked {
     background: rgba(255,255,255,0.18);
     border: 1px solid rgba(255,255,255,0.22);
 }
 
-/* 닫기 버튼 */
+/* Close button (X) */
 QPushButton#ClosePill {
     background: #2B4292;
     border: 1px solid #2B4292;
@@ -42,9 +59,23 @@ QPushButton#ClosePill {
 
     color: #FFFFFF;
     font-weight: 900;
+
+    /* 기존 */
     padding: 0px;
     text-align: center;
+
+    /* ===== (B) X 버튼 글리프 베이스라인 보정 ===== */
+    line-height: 28px;     /* 글자 세로 중앙 고정 */
+    margin-top: -1px;      /* 아래로 처져 보이는 현상 보정 */
+    /* ============================================ */
 }
+
+QWidget#TopBar QMenuBar::item {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+
 QPushButton#ClosePill:hover {
     background: #1F347A;
     border-color: #1F347A;
@@ -56,15 +87,58 @@ QPushButton#ClosePill:pressed {
 
 /* ROTATE pill */
 QPushButton#RotatePill {
-    background: #EEF1F6;
-    border: 1px solid #D6DBE6;
-    border-radius: 12px;
-    padding: 6px 14px;
+    background: #EEF1F6;              /* (색상 유지) */
+    border: 1px solid #D6DBE6;        /* (색상 유지) */
+
+    /* ✅ 높이/정렬만 조정 */
+    border-radius: 8px;               /* 12px → 8px (입력칸과 동일 톤) */
+    padding: 4px 10px;                /* 6px 14px → 4px 10px (세로 축소) */
+    min-height: 0px;                  /* 높이 강제 금지 (자연 높이) */
+
     font-weight: 900;
-    color: #111827;
+    color: #111827;                   /* (색상 유지) */
 }
+
 QPushButton#RotatePill[rotateOn="true"] {
-    background: #B91C1C;
-    border: 1px solid #B91C1C;
-    color: #FFFFFF;
+    background: #B91C1C;              /* (색상 유지) */
+    border: 1px solid #B91C1C;        /* (색상 유지) */
+    color: #FFFFFF;                   /* (색상 유지) */
+}
+
+/* =================================================
+ * TopBar 메뉴바(파일/설정/도움말) 세로 밴드 정합
+ * - 색상 변경 없음
+ * - 메뉴바 자체 프레임(얇은 선) 제거 + padding으로 위치 보정
+ * ================================================= */
+
+QWidget#TopBar QMenuBar {
+    background: transparent;
+    border: 0px;      /* ✅ 메뉴바가 그리던 얇은 선/프레임 제거 */
+    padding: 0px;
+    margin: 0px;
+}
+
+QWidget#TopBar QMenuBar::item {
+    background: transparent;
+    border: 0px;
+
+    /* ✅ '약간 위로 붙는' 체감 보정: 위를 조금 더 주고 아래를 조금 덜 줌 */
+    padding-top: 6px;
+    padding-bottom: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* 메뉴 아이템도 프레임/하이라이트로 선이 생기지 않게 */
+QWidget#TopBar QMenuBar::item {
+    background: transparent;
+    border: 0px;
+    padding: 4px 10px;
+}
+
+/* 활성/비활성 상태에서도 선 생성 방지 */
+QWidget#TopBar QMenuBar::item:selected,
+QWidget#TopBar QMenuBar::item:pressed {
+    background: transparent;
+    border: 0px;
 }

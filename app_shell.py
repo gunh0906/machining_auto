@@ -393,7 +393,8 @@ class ShellMainWindow(QMainWindow):
         btn_close.setToolTip("닫기")
         btn_close.clicked.connect(self.close)
         btn_close.setObjectName("ClosePill")
-        h1.addWidget(btn_close)
+        # ✅ 변경 전: h1.addWidget(btn_close)
+        h1.addWidget(btn_close, 0, Qt.AlignVCenter)  # ← 세로 중앙 정렬 고정
 
         v.addWidget(row1)
 
@@ -417,6 +418,12 @@ class ShellMainWindow(QMainWindow):
         lbl_machine.setStyleSheet("color: #222; font-weight: bold;")
 
         self.cb_machine = QComboBox()
+        # machining_auto/app_shell.py
+        # _build_topbar() 내부, 2행(설비명 + ROTATE) 구성 구간
+
+        self.cb_machine = QComboBox()
+        self.cb_machine.setObjectName("TopBarMachineCombo")  # ✅ 로테이트 왼쪽 설비명 콤보만 타겟팅
+
         self.cb_machine.setMinimumWidth(240)
 
         for m in (self.machine_list or []):
@@ -447,21 +454,30 @@ class ShellMainWindow(QMainWindow):
         v.addWidget(div2)
 
         # ✅ 행 높이/TopBar 높이 동기화(2행 컨트롤 기준, 하드코딩 최소화)
+
+        # machining_auto/app_shell.py
+        # _build_topbar() 내부의 def _sync(): 블록 수정
+
         def _sync():
             try:
                 h_btn = int(self.btn_rotate.sizeHint().height())
                 h_cb = int(self.cb_machine.sizeHint().height())
                 h_mb = int(self.menubar.sizeHint().height())
-                base_h = max(h_btn, h_cb, h_mb, 28)
 
-                row1.setFixedHeight(base_h)
-                row2.setFixedHeight(base_h)
+                # ✅ 내용물(콤보/버튼/메뉴) 자체 높이
+                content_h = max(h_btn, h_cb, h_mb, 28)
+
+                # ✅ 행(row) 높이는 레이아웃 상하 패딩(row_vpad*2)을 포함해야 겹침이 없음
+                row_h = content_h + (row_vpad * 2)
+
+                row1.setFixedHeight(row_h)
+                row2.setFixedHeight(row_h)
 
                 top_h = (
                     v.contentsMargins().top()
                     + v.contentsMargins().bottom()
-                    + (base_h * 2)
-                    + (1 * 2)
+                    + (row_h * 2)
+                    + (1 * 2)   # div1, div2
                 )
                 w.setFixedHeight(int(top_h))
             except Exception:
