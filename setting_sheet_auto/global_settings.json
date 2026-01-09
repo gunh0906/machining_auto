@@ -1,0 +1,13 @@
+{
+  "machine_list": [
+    "Dino_Max#3",
+    "Dino_Max#2",
+    "Dino_Max#1"
+  ],
+  "operator_map": {
+    "Dino_Max#2": "이태경",
+    "Dino_Max#1": "박태현",
+    "Dino_Max#3": "김기준"
+  },
+  "updated_at": "2025-12-01T17:02:56"
+}

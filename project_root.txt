@@ -1,0 +1,23 @@
+machining_auto/
+├─ main.py                       # (향후) 통합 UI 엔트리
+├─ assets/                        # 로고/아이콘 등 공용 리소스
+│  └─ main-logo(pdf).png
+│
+├─ common/                        # ★ 공용(머시닝 오토 바로 아래)
+│  ├─ print/
+│  │  ├─ common_blocks.py         # ★ 헤더/특이사항/프레임 "그리기" 공용
+│  │  └─ orchestrator.py          # ★ Setting 1p + CAM Np "조립" 공용
+│  ├─ models/
+│  │  └─ print_payloads.py        # 공용 payload/DTO(선택)
+│  └─ utils/
+│     └─ paths.py                 # 리소스/경로 헬퍼(선택)
+│
+├─ setting sheet auto/
+│  ├─ print_engine.py             # 기존 유지(당장 손대지 않음)
+│  ├─ ...                         # annotations, controller, widgets 등
+│
+└─ cam_sheet_auto/
+   ├─ cam_core.py
+   ├─ cam_models.py
+   ├─ ui.py
+   └─ cam_print_engine.py          # CAM 전용 본문(표) + common 호출
