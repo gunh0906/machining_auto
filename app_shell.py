@@ -826,18 +826,19 @@ class ShellMainWindow(QMainWindow):
         self._drag_pos = None
         super().mouseReleaseEvent(event)
 
-    def load_qss(app, qss_path: str):
-        """
-        외부 QSS 파일을 로드하여 QApplication에 적용한다.
-        - 파일이 없으면 무시
-        """
-        if not os.path.exists(qss_path):
-            return
+# ===============================
+# QSS Loader / Theme (전역 단일 적용)
+# ===============================
+def load_qss(app, qss_path: str):
+    """
+    (Deprecated)
+    과거 단일 QSS 파일을 직접 app.setStyleSheet로 적용하던 경로.
+    - 전역 QSS는 load_qss_bundle()로만 단일 적용한다.
+    - 이 함수는 덮어쓰기 방지를 위해 no-op로 둔다.
+    """
+    return
 
-        with open(qss_path, "r", encoding="utf-8") as f:
-            app.setStyleSheet(f.read())
 
-# ===== [QSS Loader / Theme] =====
 def _read_text_safe(path: str) -> str:
     """
     QSS 파일을 안전하게 읽어옵니다.
@@ -916,22 +917,16 @@ def apply_brand_light_theme(app: QApplication) -> None:
 
     app.setStyle(_ComboArrowProxyStyle(app.style()))
 
-    # ✅ 외부 QSS 파일 로드 (단일)
-    qss_path = Path(__file__).resolve().parent / "styles" / "00_base.qss"
-    if qss_path.exists():
-        with open(qss_path, "r", encoding="utf-8") as f:
-            app.setStyleSheet(f.read())
-    else:
-        # 파일이 없으면 아무것도 하지 않음(디버그 필요 시 print 추가 가능)
-        pass
-
-
+    # ✅ 전역 QSS는 bundle(00/10/20/90)로 1회만 적용
+    load_qss_bundle(app)
 
 def main():
     app = QApplication(sys.argv)
     apply_brand_light_theme(app)
+
     win = ShellMainWindow()
     win.show()
+
     sys.exit(app.exec())
 
 
