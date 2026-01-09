@@ -916,8 +916,14 @@ def apply_brand_light_theme(app: QApplication) -> None:
 
     app.setStyle(_ComboArrowProxyStyle(app.style()))
 
-    # ✅ 전역 QSS는 외부 파일에서만 로드
-    load_qss_bundle(app)
+    # ✅ 외부 QSS 파일 로드 (단일)
+    qss_path = Path(__file__).resolve().parent / "styles" / "00_base.qss"
+    if qss_path.exists():
+        with open(qss_path, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+    else:
+        # 파일이 없으면 아무것도 하지 않음(디버그 필요 시 print 추가 가능)
+        pass
 
 
 
