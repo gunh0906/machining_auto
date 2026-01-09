@@ -555,7 +555,7 @@ class MainWindow(QMainWindow):
         # 구분선 (✅ 1px Divider: 프레임 라인이 아닌 배경색으로 그려 검정 잔상 제거)
         coord_sep = QWidget()
         coord_sep.setFixedHeight(1)
-        coord_sep.setStyleSheet("divider", "true")
+        coord_sep.setProperty("divider", "true")
         op_layout.addWidget(coord_sep)
 
         # 추가 좌표 영역
