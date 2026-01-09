@@ -935,7 +935,7 @@ def apply_brand_light_theme(app: QApplication) -> None:
     pal.setColor(QPalette.ButtonText, QColor("#111827"))
 
     # 선택/하이라이트(너무 튀지 않게 브랜드 블루 계열)
-    pal.setColor(QPalette.Highlight, QColor("#294392"))
+    pal.setColor(QPalette.Highlight, QColor("#2B4292"))
     pal.setColor(QPalette.HighlightedText, QColor("#FFFFFF"))
 
     # Disabled 상태 가독성
