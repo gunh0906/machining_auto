@@ -26,6 +26,25 @@ QWidget#TopBarBottomDivider,
 QWidget#ProjectDivider {
     background: #D7DCE6;
 }
+/* -------------------------------------------------
+ * Setting 메인 카드(좌/우 패널) : 내부 바탕을 흰색으로 고정
+ * - 전역 QWidget 배경 강제는 금지(원칙 유지)
+ * - objectName(#PanelLeft/#PanelRight)로만 스코프 제한
+ * ------------------------------------------------- */
+
+QGroupBox#PanelLeft,
+QGroupBox#PanelRight {
+    background: #FFFFFF;          /* ✅ 카드 내부 흰색 복구 */
+    border: 1px solid #D7DCE6;
+    border-radius: 14px;
+}
+
+/* 카드 타이틀(둥근 배지) 글자색/두께 안정화 */
+QGroupBox#PanelLeft::title,
+QGroupBox#PanelRight::title {
+    color: #294392;
+    font-weight: 900;
+}
 
 /* 입력 위젯 ‘기본 테두리’만: 버튼에는 영향 없음 */
 QLineEdit, QTextEdit, QPlainTextEdit {

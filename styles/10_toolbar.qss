@@ -11,7 +11,7 @@ QWidget#TopBar {
 QWidget#SideBar,
 QWidget#SideLogoBox,
 QWidget#SideButtons {
-    background: #294392;
+    background: #2B4292;
 }
 
 /* 사이드 아이콘 */
@@ -31,8 +31,8 @@ QToolButton#SideIcon:checked {
 
 /* 닫기 버튼 */
 QPushButton#ClosePill {
-    background: #294392;
-    border: 1px solid #294392;
+    background: #2B4292;
+    border: 1px solid #2B4292;
     border-radius: 12px;
 
     min-width: 28px;

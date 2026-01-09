@@ -874,6 +874,7 @@ def load_qss_bundle(app: QApplication) -> None:
 
     app.setStyleSheet("\n\n".join([s for s in merged if s.strip()]))
 
+# machining_auto/app_shell.py
 
 def apply_brand_light_theme(app: QApplication) -> None:
     """
@@ -917,8 +918,35 @@ def apply_brand_light_theme(app: QApplication) -> None:
 
     app.setStyle(_ComboArrowProxyStyle(app.style()))
 
+    # ✅ [핵심] OS/Qt 다크 팔레트 유입을 차단하고, 라이트 팔레트를 강제 고정
+    from PySide6.QtGui import QPalette
+
+    pal = app.style().standardPalette()
+
+    # 기본 배경/텍스트
+    pal.setColor(QPalette.Window, QColor("#F4F7FB"))
+    pal.setColor(QPalette.WindowText, QColor("#111827"))
+    pal.setColor(QPalette.Base, QColor("#FFFFFF"))
+    pal.setColor(QPalette.AlternateBase, QColor("#F4F7FB"))
+    pal.setColor(QPalette.Text, QColor("#111827"))
+
+    # 버튼/메뉴 계열(메뉴바/기본 버튼이 여기 영향 받는 경우가 많음)
+    pal.setColor(QPalette.Button, QColor("#FFFFFF"))
+    pal.setColor(QPalette.ButtonText, QColor("#111827"))
+
+    # 선택/하이라이트(너무 튀지 않게 브랜드 블루 계열)
+    pal.setColor(QPalette.Highlight, QColor("#294392"))
+    pal.setColor(QPalette.HighlightedText, QColor("#FFFFFF"))
+
+    # Disabled 상태 가독성
+    pal.setColor(QPalette.Disabled, QPalette.Text, QColor("#6B7280"))
+    pal.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#6B7280"))
+
+    app.setPalette(pal)
+
     # ✅ 전역 QSS는 bundle(00/10/20/90)로 1회만 적용
     load_qss_bundle(app)
+
 
 def main():
     app = QApplication(sys.argv)

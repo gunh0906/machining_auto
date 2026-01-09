@@ -621,7 +621,7 @@ class MainWindow(QMainWindow):
 
         outer_sep = QWidget()
         outer_sep.setFixedHeight(1)
-        outer_sep.setStyleSheet("background:#D7DCE6;")
+        outer_sep.setProperty("divider", "true")  # ✅ QSS로 통일 (인라인 색상 고정 제거)
         outer_layout.addWidget(outer_sep, 4, 0, 1, 4)
 
         self.outer_extra_layout = QVBoxLayout()
@@ -674,7 +674,7 @@ class MainWindow(QMainWindow):
 
         z_sep = QWidget()
         z_sep.setFixedHeight(1)
-        z_sep.setStyleSheet("background:#D7DCE6;")
+        outer_sep.setProperty("divider", "true")  # ✅ QSS로 통일 (인라인 색상 고정 제거)
         z_form.addRow("", z_sep)
 
 
@@ -1380,6 +1380,14 @@ class MainWindow(QMainWindow):
         self._update_mode_ui()
         self._update_outer_info()
         self._update_z_info()
+        # setting_sheet_auto/main.py
+        # (MODE 버튼 생성 직후에 추가)
+        
+        self.btn_mode_center.setObjectName("ModePill")
+        self.btn_mode_center.setProperty("mode", "center")
+        
+        self.btn_mode_onepoint.setObjectName("ModePill")
+        self.btn_mode_onepoint.setProperty("mode", "onepoint")
 
     def on_mode_onepoint(self):
         self.mode_center = False

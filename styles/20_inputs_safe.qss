@@ -24,3 +24,76 @@ QComboBox#ColorCombo {
 QComboBox#ColorCombo::drop-down {
     width: 28px;
 }
+/* ------------------------------
+ * Setting 전용 버튼(국지 스코프)
+ * - 전역 QPushButton 금지 원칙 유지
+ * ------------------------------ */
+
+/* + 버튼들 */
+QPushButton#addCoordButton,
+QPushButton#addOuterButton,
+QPushButton#addZButton {
+    background: #EEF1F6;
+    border: 1px solid #D6DBE6;
+    border-radius: 8px;
+    color: #111827;
+    font-weight: 900;
+}
+QPushButton#addCoordButton:hover,
+QPushButton#addOuterButton:hover,
+QPushButton#addZButton:hover {
+    background: #E6EBF3;
+}
+
+/* 이미지 로드/초기화 버튼 */
+QPushButton#LoadImageButton,
+QPushButton#ResetButton {
+    background: #294392;
+    border: 1px solid #294392;
+    border-radius: 10px;
+    color: #FFFFFF;
+    font-weight: 800;
+    padding: 6px 12px;
+}
+QPushButton#LoadImageButton:hover,
+QPushButton#ResetButton:hover {
+    background: #1F347A;
+    border-color: #1F347A;
+}
+QPushButton#LoadImageButton:pressed,
+QPushButton#ResetButton:pressed {
+    background: #16285C;
+    border-color: #16285C;
+}
+/* ------------------------------
+ * MODE 버튼(국지 스코프)
+ * - 전역 QPushButton 금지 원칙 유지
+ * - objectName=ModePill + property(mode=...) 로만 적용
+ * ------------------------------ */
+
+QPushButton#ModePill {
+    background: #EEF1F6;
+    border: 1px solid #D6DBE6;
+    border-radius: 10px;
+    padding: 4px 12px;
+    font-weight: 900;
+    color: #111827;
+    min-height: 28px;
+}
+
+QPushButton#ModePill:hover {
+    background: #E6EBF3;
+}
+
+QPushButton#ModePill:checked {
+    background: #2B4292;      /* ✅ 전하 요청 브랜드 블루 */
+    border: 1px solid #2B4292;
+    color: #FFFFFF;
+}
+
+QPushButton#ModePill[mode="onepoint"]:checked {
+    /* ONE-POINT도 동일한 브랜드 블루로 통일(요구사항) */
+    background: #2B4292;
+    border: 1px solid #2B4292;
+    color: #FFFFFF;
+}
