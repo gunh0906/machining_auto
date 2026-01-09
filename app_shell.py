@@ -1029,12 +1029,6 @@ def apply_brand_light_theme(app: QApplication):
             width: 22px;
             border-left: 0px;
         }
-        QComboBox::down-arrow {
-            width: 10px;
-            height: 6px;
-            image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1 L5 5 L9 1 Z' fill='%23111827'/></svg>");
-        }
-
                       
         /* ===== Inputs (전역은 '색/테두리'만, 크기 강제 금지) ===== */
         QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox {
@@ -1055,10 +1049,6 @@ def apply_brand_light_theme(app: QApplication):
             border-top-right-radius: 12px;
             border-bottom-right-radius: 12px;
             background: transparent;
-        }
-        QComboBox::down-arrow {
-            width: 10px;
-            height: 10px;
         }
 
         /* 콤보 팝업 리스트도 라운드(드롭다운 가독성 유지) */
