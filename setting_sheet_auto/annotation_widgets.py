@@ -5,7 +5,7 @@ from typing import Callable, Optional
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QLabel, QPushButton, QDoubleSpinBox, QComboBox
 )
-
+from PySide6.QtCore import Qt
 from annotations import ShapeType
 from annotation_tools import AnnotationToolState
 
@@ -16,14 +16,39 @@ DEFAULT_COLORS = [
     "Magenta", "Cyan", "Orange", "Black", "Gray"
 ]
 
-
 def _create_color_combo(initial: str = "Yellow") -> QComboBox:
     combo = QComboBox()
     combo.addItems(DEFAULT_COLORS)
+
     if initial in DEFAULT_COLORS:
         combo.setCurrentText(initial)
-    combo.setMaximumWidth(90)
+
+    # ✅ 폭 제한 제거(잘림 방지)
+    combo.setMinimumWidth(120)
+    combo.setMaximumWidth(200)
+
+    # ✅ ▼ 강제(인라인 SVG)
+    combo.setStyleSheet(r"""
+        QComboBox {
+            padding-right: 22px;
+        }
+        QComboBox::drop-down {
+            width: 22px;
+            border-left: 0px;
+        }
+        QComboBox::down-arrow {
+            width: 10px;
+            height: 6px;
+            image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'>\
+<path d='M1 1 L5 5 L9 1 Z' fill='%23111827'/>\
+</svg>");
+        }
+    """)
+
     return combo
+
+
 
 
 class AnnotationToolBar(QWidget):
@@ -87,6 +112,15 @@ class AnnotationToolBar(QWidget):
         self.btn_datumL.setToolTip("기준면 표시용 L 도형")
         self.btn_datumL.clicked.connect(lambda checked: self._select_shape(ShapeType.DATUM_L))
         layout.addWidget(self.btn_datumL)
+        # ✅ [UI 고정] 도형 버튼 가독성 확보 (DPI/레이아웃 압축에 흔들리지 않게)
+        btn_font = self.btn_rect.font()
+        btn_font.setPointSize(12)
+        btn_font.setBold(True)
+
+        for b in (self.btn_rect, self.btn_circle, self.btn_datumL):
+            b.setFont(btn_font)
+            b.setFixedSize(34, 28)
+            b.setFocusPolicy(Qt.NoFocus)
 
         layout.addSpacing(12)
 

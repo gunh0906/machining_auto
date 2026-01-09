@@ -44,14 +44,12 @@ COLOR_CHOICES = [
 def create_color_combo(initial: str = "Red") -> QComboBox:
     """
     색상 이름 대신, 실제 색상 사각형이 보이도록 만든 콤보박스
-    내부 값은 기존처럼 "Red", "Yellow" 문자열을 그대로 유지하여
-    나머지 코드(QColor 사용 부분)를 건드리지 않음
+    내부 값은 기존처럼 "Red", "Yellow" 문자열을 그대로 유지합니다.
     """
     combo = QComboBox()
     combo.setIconSize(QSize(14, 14))
 
     for name in COLOR_CHOICES:
-        # 색상 사각형 아이콘 생성
         pix = QPixmap(14, 14)
         pix.fill(QColor(name))
         icon = QIcon(pix)
@@ -60,8 +58,24 @@ def create_color_combo(initial: str = "Red") -> QComboBox:
     if initial in COLOR_CHOICES:
         combo.setCurrentText(initial)
 
-    combo.setMaximumWidth(80)
+    # ✅ 폭이 좁으면 ▼(드롭다운)가 잘림 → 최소 폭 확보
+    combo.setMinimumWidth(110)
+    combo.setMaximumWidth(180)
+
+    # ✅ ▼ 영역(드롭다운 버튼) 확보
+    combo.setStyleSheet("""
+        QComboBox {
+            padding-right: 18px;
+        }
+        QComboBox::drop-down {
+            width: 18px;
+            border-left: 0px;
+        }
+    """)
+
     return combo
+
+
 
 def apply_mono_font_safe(edit: QLineEdit, family: str = "Consolas", fallback_pt: int = 11):
     """
@@ -777,10 +791,25 @@ class MainWindow(QMainWindow):
         # ✅ PDF 레이아웃 선택(세로/가로) - A4 프레임 안쪽, 오른쪽 끝
         self.combo_pdf_layout = QComboBox()
         self.combo_pdf_layout.addItems(["세로", "가로"])
-        self.combo_pdf_layout.setFixedWidth(80)
+
+        # ❌ self.combo_pdf_layout.setFixedWidth(80)
+        # ✅ 드롭다운/텍스트가 잘리지 않도록 최소 폭 확보
+        self.combo_pdf_layout.setMinimumWidth(90)
+        self.combo_pdf_layout.setMaximumWidth(140)
+
+        # ✅ ▼ 영역 확보
+        self.combo_pdf_layout.setStyleSheet("""
+            QComboBox {
+                padding-right: 18px;
+            }
+            QComboBox::drop-down {
+                width: 18px;
+                border-left: 0px;
+            }
+        """)
+
         self.combo_pdf_layout.setToolTip("PDF 출력 레이아웃을 선택합니다.")
         img_top_layout.addWidget(self.combo_pdf_layout)
-
         right_layout.addWidget(img_top)
 
         # 중간: 주석 도구 바 (도형 + 화살표/텍스트 + 두께/색상)
