@@ -27,15 +27,17 @@ def _create_color_combo(initial: str = "Yellow") -> QComboBox:
     combo.setMaximumWidth(220)
     combo.setFixedHeight(28)
 
-    # ✅ ▼ 강제(인라인 SVG) - "한 줄"로 고정(로딩 실패 방지)
-    combo.setStyleSheet(
-        "QComboBox{padding-right:22px;}"
-        "QComboBox::drop-down{width:22px;border-left:0px;}"
-        "QComboBox::down-arrow{width:10px;height:6px;"
-        "image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1 L5 5 L9 1 Z' fill='%23111827'/></svg>\");}"
-    )
-    return combo
+    combo.setStyleSheet("""
+        QComboBox {
+            padding-right: 28px;
+        }
+        QComboBox::drop-down {
+            width: 28px;
+        }
+    """)
 
+
+    return combo
 
 class AnnotationToolBar(QWidget):
     """
@@ -240,42 +242,42 @@ class AnnotationToolBar(QWidget):
     def _use_shape_tool(self) -> None:
         self.tool_state.use_shape_tool(self.tool_state.shape_type)
         self._sync_tool_buttons()
-    
+
     def _use_arrow_tool(self) -> None:
         self.tool_state.use_arrow_tool()
         self._sync_tool_buttons()
-    
+
     def _use_text_tool(self) -> None:
         self.tool_state.use_text_tool()
         self._sync_tool_buttons()
-    
+
     def _use_select_tool(self) -> None:
         self.tool_state.use_select_tool()
         self._sync_tool_buttons()
-    
+
     def _sync_tool_buttons(self) -> None:
         # tool_state.active_tool에 맞춰 체크 표시
         try:
             from .annotation_tools import ToolKind
         except Exception:
             return
-    
+
         cur = self.tool_state.active_tool
         self.btn_tool_shape.setChecked(cur == ToolKind.SHAPE)
         self.btn_tool_arrow.setChecked(cur == ToolKind.ARROW)
         self.btn_tool_text.setChecked(cur == ToolKind.TEXT)
         self.btn_tool_select.setChecked(cur == ToolKind.SELECT)
-    
+
     def _arrow_color_changed(self, color: str) -> None:
         self.tool_state.arrow_color = color
-    
+
     def _text_color_changed(self, color: str) -> None:
         self.tool_state.text_color = color
-    
+
     def _text_size_changed(self, value: int) -> None:
         self.tool_state.text_size = float(value)
-    
-    
+
+
     def _stroke_color_changed(self, color: str) -> None:
         self.tool_state.stroke_color = color
         self.tool_state.arrow_color = color  # 화살표도 동일 색으로 사용하는 예

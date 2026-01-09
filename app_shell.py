@@ -11,11 +11,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt, QTimer, QEvent
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QSize, Qt, QTimer, QEvent, QPointF
+from PySide6.QtGui import QIcon, QPainter, QPolygonF, QColor
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QToolButton, QButtonGroup, QStackedWidget, QMenuBar, QMenu, QMessageBox, QFrame
+    QToolButton, QButtonGroup, QStackedWidget, QMenuBar, QMenu, QMessageBox, QFrame, QProxyStyle, QStyle
 )
 
 # ✅ Setting쪽 설정(JSON) 공유
@@ -834,7 +834,48 @@ def apply_brand_light_theme(app: QApplication):
     - TopControls 구분선만 추가
     """
     app.setStyle("Fusion")
+def apply_brand_light_theme(app: QApplication):
+    """
+    [복구 우선]
+    ...
+    """
+    app.setStyle("Fusion")
+
+    # ✅ QComboBox ▼(down-arrow)를 QSS가 아니라 Style 엔진으로 "직접 그리기"
+    class _ComboArrowProxyStyle(QProxyStyle):
+        def drawPrimitive(self, element, option, painter, widget=None):
+            if element == QStyle.PE_IndicatorArrowDown:
+                painter.save()
+                try:
+                    painter.setRenderHint(QPainter.Antialiasing, True)
+
+                    r = option.rect.adjusted(0, 0, 0, 0)
+                    cx = r.center().x()
+                    cy = r.center().y()
+
+                    # ▼ 삼각형 크기(픽셀) - DPI에서도 무난
+                    w = max(8.0, r.width() * 0.35)
+                    h = max(5.0, r.height() * 0.22)
+
+                    p1 = QPointF(cx - w / 2.0, cy - h / 2.0)
+                    p2 = QPointF(cx + w / 2.0, cy - h / 2.0)
+                    p3 = QPointF(cx,           cy + h / 2.0)
+
+                    poly = QPolygonF([p1, p2, p3])
+
+                    painter.setPen(Qt.NoPen)
+                    painter.setBrush(QColor("#111827"))
+                    painter.drawPolygon(poly)
+                finally:
+                    painter.restore()
+                return
+
+            return super().drawPrimitive(element, option, painter, widget)
+
+    app.setStyle(_ComboArrowProxyStyle(app.style()))
+
     app.setStyleSheet(r"""
+
         /* ===== Base (배경은 MainWindow만) ===== */
         QMainWindow { background: #F4F7FB; }
         QWidget {
@@ -978,7 +1019,23 @@ def apply_brand_light_theme(app: QApplication):
             max-height: 28px;
         }
 
+        /* ===== ComboBox: ▼(down-arrow) 강제 표시 (Fusion/QSS 환경에서도 항상 보이게) ===== */
+        QComboBox {
+            padding-right: 22px;      /* ▼ 영역 확보 */
+        }
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 22px;
+            border-left: 0px;
+        }
+        QComboBox::down-arrow {
+            width: 10px;
+            height: 6px;
+            image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1 L5 5 L9 1 Z' fill='%23111827'/></svg>");
+        }
 
+                      
         /* ===== Inputs (전역은 '색/테두리'만, 크기 강제 금지) ===== */
         QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox {
             background: #FFFFFF;

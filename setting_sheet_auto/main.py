@@ -43,8 +43,9 @@ COLOR_CHOICES = [
 
 def create_color_combo(initial: str = "Red") -> QComboBox:
     """
-    색상 이름 대신, 실제 색상 사각형이 보이도록 만든 콤보박스
-    내부 값은 기존처럼 "Red", "Yellow" 문자열을 그대로 유지합니다.
+    색상 아이콘 + 텍스트 콤보.
+    - ▼(드롭다운 화살표)가 환경/QSS에 의해 사라지는 문제를 방지하기 위해
+      down-arrow를 인라인 SVG로 명시합니다.
     """
     combo = QComboBox()
     combo.setIconSize(QSize(14, 14))
@@ -52,29 +53,25 @@ def create_color_combo(initial: str = "Red") -> QComboBox:
     for name in COLOR_CHOICES:
         pix = QPixmap(14, 14)
         pix.fill(QColor(name))
-        icon = QIcon(pix)
-        combo.addItem(icon, name)
+        combo.addItem(QIcon(pix), name)
 
     if initial in COLOR_CHOICES:
         combo.setCurrentText(initial)
 
-    # ✅ 폭이 좁으면 ▼(드롭다운)가 잘림 → 최소 폭 확보
-    combo.setMinimumWidth(110)
-    combo.setMaximumWidth(180)
-
-    # ✅ ▼ 영역(드롭다운 버튼) 확보
+    # ✅ 폭 제한 제거(잘림 방지)
+    combo.setMinimumWidth(120)
+    combo.setMaximumWidth(200)
     combo.setStyleSheet("""
         QComboBox {
-            padding-right: 18px;
+            padding-right: 28px;
         }
         QComboBox::drop-down {
-            width: 18px;
-            border-left: 0px;
+            width: 28px;
         }
     """)
 
-    return combo
 
+    return combo
 
 
 def apply_mono_font_safe(edit: QLineEdit, family: str = "Consolas", fallback_pt: int = 11):
