@@ -40,16 +40,13 @@ COLOR_CHOICES = [
     "Red", "Green", "Blue", "Yellow",
     "Magenta", "Cyan", "Orange", "Black", "Gray"
 ]
-
 def create_color_combo(initial: str = "Red") -> QComboBox:
     """
-    색상 아이콘 + 텍스트 콤보.
-    - 전역 QSS 충돌을 막기 위해, 인라인 QSS를 제거하고 objectName 스코프로만 스타일을 건다.
-    - (drop-down 폭/패딩은 20_inputs_safe.qss의 #ColorCombo로 제어)
+    색상 콤보 (데이터 전용)
+    - 아이템(아이콘/텍스트)만 구성
+    - 외형/팝업/사이즈/QSS 관여 절대 금지
     """
     combo = QComboBox()
-    combo.setObjectName("ColorCombo")
-    combo.setIconSize(QSize(14, 14))
 
     for name in COLOR_CHOICES:
         pix = QPixmap(14, 14)
@@ -59,15 +56,8 @@ def create_color_combo(initial: str = "Red") -> QComboBox:
     if initial in COLOR_CHOICES:
         combo.setCurrentText(initial)
 
-    # ✅ 폭 제한 제거(잘림 방지)
-    combo.setMinimumWidth(120)
-    combo.setMaximumWidth(200)
-    # ✅ [핵심] 드롭다운 팝업의 "네모 프레임/그림자" 제거
-    popup = combo.view().window()
-    popup.setWindowFlag(Qt.FramelessWindowHint, True)
-    popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
-    # ✅ 인라인 setStyleSheet 제거 (QSS 파일에서만 관리)
     return combo
+
 
 
 
@@ -796,6 +786,12 @@ class MainWindow(QMainWindow):
         self.combo_pdf_layout.setMinimumWidth(90)
         self.combo_pdf_layout.setMaximumWidth(140)
         self.combo_pdf_layout.setToolTip("PDF 출력 레이아웃을 선택합니다.")
+        popup = self.combo_pdf_layout.view().window()
+        popup.setWindowFlag(Qt.FramelessWindowHint, True)
+        popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
+        popup.setObjectName("ComboPopup")
+        popup.setAttribute(Qt.WA_TranslucentBackground, True)
+
         img_top_layout.addWidget(self.combo_pdf_layout)
         right_layout.addWidget(img_top)
 
@@ -815,7 +811,7 @@ class MainWindow(QMainWindow):
         row_shape_layout.addWidget(lbl_shape)
 
         # 사각형 도구
-        self.btn_shape_rect = QPushButton("□")
+        self.btn_shape_rect = QPushButton("ㅁ")
         self.btn_shape_rect.setCheckable(True)
         self.btn_shape_rect.setToolTip("사각형 도형")
         self.btn_shape_rect.setProperty("toolButton", True)
@@ -960,6 +956,8 @@ class MainWindow(QMainWindow):
 
         self.combo_shape_fill_color = QComboBox()
         self.combo_shape_fill_color.setIconSize(QSize(14, 14))
+    
+    
 
         # '없음' 은 투명 아이콘으로 표시
         none_pix = QPixmap(14, 14)
@@ -983,6 +981,7 @@ class MainWindow(QMainWindow):
             lambda *_: self.on_shape_fill_color_changed(self.combo_shape_fill_color.currentText())
         )
         self.combo_shape_fill_color.setObjectName("AnnoFillCombo")
+        # ✅ [핵심] 채움 콤보도 다른 색상 콤보들과 동일하게 팝업 프레임/그림자 제거
         row_style_layout.addWidget(self.combo_shape_fill_color)
 
 

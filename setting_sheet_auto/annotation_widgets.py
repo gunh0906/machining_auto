@@ -23,13 +23,7 @@ def _create_color_combo(initial: str = "Yellow") -> QComboBox:
     if initial in DEFAULT_COLORS:
         combo.setCurrentText(initial)
 
-    # ✅ 최소 가독 폭/높이만 보장 (▼는 Qt 기본 렌더)
-    combo.setFixedHeight(28)
 
-    # ✅ [핵심] 드롭다운 팝업의 "네모 프레임/그림자" 제거 (QSS 겹침 방지)
-    popup = combo.view().window()
-    popup.setWindowFlag(Qt.FramelessWindowHint, True)
-    popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
     return combo
 
 

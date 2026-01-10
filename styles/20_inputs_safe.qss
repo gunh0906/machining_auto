@@ -258,40 +258,34 @@ QComboBox#AnnoTextCombo::down-arrow {
     margin-top: 1px;
 }
 
-/* =================================================
- * QComboBox Popup - 정석(QAbstractItemView) 단일 적용
- * ================================================= */
-
-QComboBox QAbstractItemView {
-    background-color: #FFFFFF;
-    border: 1px solid #D7DCE6;
-    border-radius: 14px;
+QComboBox#AnnoStrokeCombo QAbstractItemView,
+QComboBox#AnnoFillCombo   QAbstractItemView,
+QComboBox#AnnoArrowCombo  QAbstractItemView,
+QComboBox#AnnoTextCombo   QAbstractItemView {
+    background: transparent;
+    border: none;
     outline: 0;
-    padding: 0px;
+    border-radius: 8px;
 }
 
-QComboBox QAbstractItemView::viewport {
+QComboBox#AnnoStrokeCombo QAbstractItemView::viewport,
+QComboBox#AnnoFillCombo   QAbstractItemView::viewport,
+QComboBox#AnnoArrowCombo  QAbstractItemView::viewport,
+QComboBox#AnnoTextCombo   QAbstractItemView::viewport {
     background: transparent;
 }
 
-QComboBox QAbstractItemView::item {
-    height: 26px;
-    padding: 2px 10px;
-    margin: 2px 6px;
-    border-radius: 8px;
-    color: #111827;
+QComboBox#AnnoStrokeCombo QAbstractItemView::item,
+QComboBox#AnnoFillCombo   QAbstractItemView::item,
+QComboBox#AnnoArrowCombo  QAbstractItemView::item,
+QComboBox#AnnoTextCombo   QAbstractItemView::item {
+    padding: 4px 10px;
+    background: transparent;
 }
 
-QComboBox QAbstractItemView::item:hover {
-    background-color: #F4F7FB;
-}
-
-QComboBox QAbstractItemView::item:selected {
+QComboBox#AnnoStrokeCombo QAbstractItemView::item:selected,
+QComboBox#AnnoFillCombo   QAbstractItemView::item:selected,
+QComboBox#AnnoArrowCombo  QAbstractItemView::item:selected,
+QComboBox#AnnoTextCombo   QAbstractItemView::item:selected {
     background-color: #E8EEFF;
-    color: #111827;
 }
-
-
-
-
-
