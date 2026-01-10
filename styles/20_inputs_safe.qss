@@ -143,7 +143,8 @@ QPushButton#PdfButton {
     /* ===== 모양/크기: CENTER 버튼과 동일 ===== */
     border-radius: 8px;
     padding: 4px 10px;
-    min-height: 0px;
+    min-height: 28px;
+    max-height: 28px;
 
     font-weight: 900;
     text-align: center;
@@ -169,21 +170,56 @@ QPushButton#PdfButton:pressed {
  * - ▼(역삼각형) 표시를 위해 drop-down 폭 + padding-right 확보
  * - 색상 변경 없음(기본 입력 스타일과 동일 톤)
  * ================================================= */
+ /* PDF 레이아웃 콤보박스 - ProxyStyle ▼ 호환 정석 */
 
+/* =========================================
+ * PDF 레이아웃 콤보 ▼ (이미지 없이 도형)
+ * ========================================= */
+
+ /* PDF 레이아웃 콤보 - ▼는 ProxyStyle이 그림: 공간만 확보 */
 QComboBox#PdfLayoutCombo {
     border: 1px solid #D7DCE6;
     border-radius: 8px;
 
-    /* ✅ PdfButton(센터 pill)과 동일 높이감 */
-    padding: 4px 28px 4px 10px;   /* right는 ▼ 공간 확보 */
-    min-height: 8px;
+    min-height: 28px;
+    max-height: 28px;
+
+    /* ▼ 영역 확보 */
+    padding: 4px 42px 4px 10px;
 
     background: #FFFFFF;
     color: #111827;
-    font-weight: 900;
+    font-weight: 700;
+}
+
+/* styles/90_experimental.qss (또는 20_inputs_safe.qss)에 추가) */
+
+QComboBox#PdfLayoutCombo {
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+    min-height: 28px;
+    max-height: 28px;
+    padding: 4px 42px 4px 10px;   /* ▼ 공간 */
+    background: #FFFFFF;
+    
+    font-weight: 700;
 }
 
 QComboBox#PdfLayoutCombo::drop-down {
-    width: 18px;     /* ✅ ▼가 그려질 영역 */
-    border: 0px;
+    width: 32px;
+    border-left: 1px solid #D7DCE6;
 }
+
+QComboBox#PdfLayoutCombo::down-arrow {
+    image: url(machining_auto/assets/tools/inverted_triangle_icon.png);
+    width: 18px;
+    height: 12px;
+    margin-top: 1px;             /* 수직 중앙 미세 보정 */
+}
+
+
+
+
+
+
+

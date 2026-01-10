@@ -903,19 +903,33 @@ def apply_brand_light_theme(app: QApplication) -> None:
 
     # ✅ QComboBox ▼(down-arrow)를 QSS가 아니라 Style 엔진으로 "직접 그리기"
     class _ComboArrowProxyStyle(QProxyStyle):
+
+    # class _ComboArrowProxyStyle(QProxyStyle): 내부의 drawPrimitive() 전체 교체
+
         def drawPrimitive(self, element, option, painter, widget=None):
             if element == QStyle.PE_IndicatorArrowDown:
                 painter.save()
                 try:
                     painter.setRenderHint(QPainter.Antialiasing, True)
 
-                    r = option.rect.adjusted(0, 0, 0, 0)
-                    cx = r.center().x()
-                    cy = r.center().y()
+                    r = option.rect
+                    if r.isNull() or r.width() < 6 or r.height() < 6:
+                        # rect가 너무 작으면 기본 스타일에 위임(최소 안전장치)
+                        return super().drawPrimitive(element, option, painter, widget)
 
-                    # ▼ 삼각형 크기(픽셀) - DPI에서도 무난
-                    w = max(8.0, r.width() * 0.35)
-                    h = max(5.0, r.height() * 0.22)
+                    inner = r.adjusted(1, 1, -1, -1)
+                    if inner.width() < 4 or inner.height() < 4:
+                        return super().drawPrimitive(element, option, painter, widget)
+
+                    # ✅ rect 밖으로 나가며 사라지는 문제를 원천 차단
+                    painter.setClipRect(inner)
+
+                    cx = inner.center().x()
+                    cy = inner.center().y()
+
+                    # ✅ “최소값 강제”가 아니라 “rect 안에 들어가도록” clamp
+                    w = max(4.0, min(10.0, inner.width() * 0.55))
+                    h = max(3.0, min(7.0,  inner.height() * 0.40))
 
                     p1 = QPointF(cx - w / 2.0, cy - h / 2.0)
                     p2 = QPointF(cx + w / 2.0, cy - h / 2.0)
@@ -926,11 +940,13 @@ def apply_brand_light_theme(app: QApplication) -> None:
                     painter.setPen(Qt.NoPen)
                     painter.setBrush(QColor("#111827"))
                     painter.drawPolygon(poly)
+                    return
                 finally:
                     painter.restore()
-                return
 
             return super().drawPrimitive(element, option, painter, widget)
+
+
 
     app.setStyle(_ComboArrowProxyStyle(app.style()))
 
