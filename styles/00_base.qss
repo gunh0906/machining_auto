@@ -66,3 +66,54 @@ QComboBox {
 QGraphicsView#ImageView {
     border: 1px solid #000000;
 }
+/* =================================================
+ * PanelLeft/PanelRight 내부 "하위 QGroupBox" 타이틀 스타일
+ * - 목적: 타이틀이 선 위에 겹치지 않게(배경으로 라인 마스킹)
+ * - 목적: 타이틀 글자색을 카드 타이틀과 동일 계열(#294392)로 통일
+ * - 범위: PanelLeft/PanelRight 내부의 모든 하위 QGroupBox만
+ * ================================================= */
+
+/* 하위 그룹박스 프레임(선/라운드) */
+QGroupBox#PanelLeft QGroupBox,
+QGroupBox#PanelRight QGroupBox {
+    border: 1px solid #D7DCE6;
+    border-radius: 12px;
+    margin-top: 14px;          /* ✅ 타이틀이 들어갈 상단 여유 */
+    padding-top: 10px;         /* ✅ 타이틀 아래 컨텐츠와 간섭 방지 */
+}
+
+/* 하위 그룹박스 타이틀: 선 위 겹침 방지(배경으로 가림) + 색상 통일 */
+QGroupBox#PanelLeft QGroupBox::title,
+QGroupBox#PanelRight QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+
+    left: 15px;
+    top: 2px;
+
+    padding: 0px 8px;          /* ✅ 타이틀 좌우 여백(라인 마스킹 폭) */
+    background: #FFFFFF;       /* ✅ 선이 글씨를 관통하지 않게 흰 배경으로 덮음 */
+
+    color: #294392;            /* ✅ "공작물/세팅 정보"와 동일 계열 */
+    font-weight: 900;          /* ✅ 굵은 타이틀 */
+}
+
+/* + 버튼들 : 아이콘 기반 */
+QPushButton#addCoordButton,
+QPushButton#addOuterButton,
+QPushButton#addZButton {
+    background: #EEF1F6;
+    border: 1px solid #D6DBE6;
+    border-radius: 8px;
+}
+
+QPushButton#addCoordButton:hover,
+QPushButton#addOuterButton:hover,
+QPushButton#addZButton:hover {
+    background: #E6EBF3;
+}
+
+
+
+
+

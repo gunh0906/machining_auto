@@ -105,7 +105,6 @@ class ImageView(QGraphicsView):
         self.setCursor(Qt.ArrowCursor)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
 
-
     def resizeEvent(self, event):
         """창 크기 변경 시 현재 Scene 전체가 프레임에 맞게 보이도록"""
         super().resizeEvent(event)
@@ -284,6 +283,35 @@ class MainWindow(QMainWindow):
         from pathlib import Path
         import sys
         base_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    
+        # ✅ 툴 아이콘 폴더 (base_dir 이후에만 선언 가능)
+        tools_dir = base_dir / "assets" / "tools"
+        if not tools_dir.exists():
+            tools_dir = base_dir.parent / "assets" / "tools"
+        if not tools_dir.exists():
+            tools_dir = Path(__file__).resolve().parent / "assets" / "tools"
+        if not tools_dir.exists():
+            tools_dir = Path(__file__).resolve().parent.parent / "assets" / "tools"
+
+        print(f"[DEBUG] __file__={Path(__file__).resolve()}")
+        print(f"[DEBUG] base_dir={base_dir}")
+        print(f"[DEBUG] tools_dir={tools_dir} exists={tools_dir.exists()}")
+
+        def _apply_btn_icon(btn: QPushButton, filename: str, size: int = 16) -> None:
+            btn.setText("")
+            path = tools_dir / filename
+            if not path.exists():
+                print(f"[WARN] icon file not found: {path}")
+                return
+
+            ico = QIcon(str(path))
+            if ico.isNull():
+                print(f"[WARN] QIcon is null: {path}")
+                return
+
+            btn.setIcon(ico)
+            btn.setIconSize(QSize(size, size))
+
 
         # 제목 표시줄 아이콘은 ico 사용 권장
         icon_path = base_dir / "assets" / "SettingSheetTool.ico"
@@ -566,11 +594,12 @@ class MainWindow(QMainWindow):
         coord_extra_header_layout.addWidget(QLabel("추가 좌표:"))
         coord_extra_header_layout.addStretch(1)
 
-        self.btn_add_coord = QPushButton("+")
+        self.btn_add_coord = QPushButton("")
         self.btn_add_coord.setObjectName("addCoordButton")
         self.btn_add_coord.setCursor(Qt.PointingHandCursor)
         self.btn_add_coord.setFocusPolicy(Qt.NoFocus)
         self.btn_add_coord.setFixedSize(36, 30)
+        _apply_btn_icon(self.btn_add_coord, "plus_icon.png", size=14)
         self.btn_add_coord.setToolTip("추가 좌표 입력")
         self.btn_add_coord.clicked.connect(self.add_coord_point)
         self.btn_add_coord.setFlat(False)
@@ -630,12 +659,13 @@ class MainWindow(QMainWindow):
         outer_extra_row_layout.setContentsMargins(0, 4, 0, 0)
         outer_extra_row_layout.setSpacing(4)
 
-        btn_outer_add = QPushButton("+")
+        btn_outer_add = QPushButton("")
         btn_outer_add.setObjectName("addOuterButton")
         btn_outer_add.setCursor(Qt.PointingHandCursor)
         btn_outer_add.setFocusPolicy(Qt.NoFocus)
         btn_outer_add.setFlat(False)
         btn_outer_add.setFixedSize(36, 30)
+        _apply_btn_icon(btn_outer_add, "plus_icon.png", size=14)
         btn_outer_add.setToolTip("외곽 관련 치수 항목 추가")
         btn_outer_add.clicked.connect(self.add_outer_dimension)
 
@@ -682,12 +712,13 @@ class MainWindow(QMainWindow):
         z_extra_layout_container.setContentsMargins(0, 4, 0, 0)
         z_extra_layout_container.setSpacing(2)
 
-        btn_z_add = QPushButton("+")
+        btn_z_add = QPushButton("")
         btn_z_add.setObjectName("addZButton")
         btn_z_add.setCursor(Qt.PointingHandCursor)
         btn_z_add.setFocusPolicy(Qt.NoFocus)
         btn_z_add.setFlat(False)
         btn_z_add.setFixedSize(36, 30)
+        _apply_btn_icon(btn_z_add, "plus_icon.png", size=14)
         btn_z_add.setToolTip("Z 관련 치수 항목 추가")
         btn_z_add.clicked.connect(self.add_z_dimension)
 
@@ -811,76 +842,84 @@ class MainWindow(QMainWindow):
         row_shape_layout.addWidget(lbl_shape)
 
         # 사각형 도구
-        self.btn_shape_rect = QPushButton("ㅁ")
+        self.btn_shape_rect = QPushButton("")
         self.btn_shape_rect.setCheckable(True)
         self.btn_shape_rect.setToolTip("사각형 도형")
         self.btn_shape_rect.setProperty("toolButton", True)
         self.btn_shape_rect.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.RECT)
         )
+        _apply_btn_icon(self.btn_shape_rect, "shape_rect_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_rect)
+        
 
         # 원형 도구
-        self.btn_shape_circle = QPushButton("○")
+        self.btn_shape_circle = QPushButton("")
         self.btn_shape_circle.setCheckable(True)
         self.btn_shape_circle.setToolTip("원형 도형")
         self.btn_shape_circle.setProperty("toolButton", True)
         self.btn_shape_circle.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.CIRCLE)
         )
+        _apply_btn_icon(self.btn_shape_circle, "shape_circle_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_circle)
 
         # 타원 도구
-        self.btn_shape_ellipse = QPushButton("⊙")
+        self.btn_shape_ellipse = QPushButton("")
         self.btn_shape_ellipse.setCheckable(True)
         self.btn_shape_ellipse.setToolTip("타원 도형")
         self.btn_shape_ellipse.setProperty("toolButton", True)
         self.btn_shape_ellipse.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.ELLIPSE)
         )
+        _apply_btn_icon(self.btn_shape_ellipse, "shape_ellipse_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_ellipse)
 
         # 삼각형 도구
-        self.btn_shape_triangle = QPushButton("△")
+        self.btn_shape_triangle = QPushButton("")
         self.btn_shape_triangle.setCheckable(True)
         self.btn_shape_triangle.setToolTip("삼각형 도형")
         self.btn_shape_triangle.setProperty("toolButton", True)
         self.btn_shape_triangle.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.TRIANGLE)
         )
+        _apply_btn_icon(self.btn_shape_triangle, "shape_triangle_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_triangle)
 
         # 다이아(마름모) 도구 - POLYGON
-        self.btn_shape_polygon = QPushButton("◇")
+        self.btn_shape_polygon = QPushButton("")
         self.btn_shape_polygon.setCheckable(True)
         self.btn_shape_polygon.setToolTip("마름모 도형")
         self.btn_shape_polygon.setProperty("toolButton", True)
         self.btn_shape_polygon.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.POLYGON)
         )
+        _apply_btn_icon(self.btn_shape_polygon, "shape_diamond_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_polygon)
 
         # 별 도형
-        self.btn_shape_star = QPushButton("★")
+        self.btn_shape_star = QPushButton("")
         self.btn_shape_star.setCheckable(True)
         self.btn_shape_star.setToolTip("별 도형")
         self.btn_shape_star.setProperty("toolButton", True)
         self.btn_shape_star.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.STAR)
         )
+        _apply_btn_icon(self.btn_shape_star, "shape_star_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_star)
 
         # 기준면 L 도형
-        self.btn_shape_datumL = QPushButton("L")
+        self.btn_shape_datumL = QPushButton("")
         self.btn_shape_datumL.setCheckable(True)
         self.btn_shape_datumL.setToolTip("기준면 표시용 L 도형")
         self.btn_shape_datumL.setProperty("toolButton", True)
         self.btn_shape_datumL.clicked.connect(
             lambda checked: self.on_select_shape_tool(ShapeType.DATUM_L)
         )
+        _apply_btn_icon(self.btn_shape_datumL, "shape_datum_l_icon.png", size=20)
         row_shape_layout.addWidget(self.btn_shape_datumL)
-
         row_shape_layout.addStretch(1)
+        
         anno_layout.addWidget(row_shape)
 
         # ─ 2행: 화살표 / 텍스트 도구 ─
@@ -897,6 +936,7 @@ class MainWindow(QMainWindow):
         self.btn_tool_arrow.setToolTip("화살표 도구")
         self.btn_tool_arrow.setProperty("toolButton", True)
         self.btn_tool_arrow.clicked.connect(self.on_select_arrow_tool)
+        _apply_btn_icon(self.btn_tool_arrow, "tool_arrow_icon.png", size=20)
         row_tools_layout.addWidget(self.btn_tool_arrow)
 
         lbl_text_tool = QLabel("텍스트:")
@@ -907,6 +947,7 @@ class MainWindow(QMainWindow):
         self.btn_tool_text.setToolTip("텍스트 도구")
         self.btn_tool_text.setProperty("toolButton", True)
         self.btn_tool_text.clicked.connect(self.on_select_text_tool)
+        _apply_btn_icon(self.btn_tool_text, "tool_text_icon.png", size=20)
         row_tools_layout.addWidget(self.btn_tool_text)
 
         row_tools_layout.addStretch(1)
