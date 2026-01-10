@@ -24,9 +24,12 @@ def _create_color_combo(initial: str = "Yellow") -> QComboBox:
         combo.setCurrentText(initial)
 
     # ✅ 최소 가독 폭/높이만 보장 (▼는 Qt 기본 렌더)
-    combo.setMinimumWidth(120)
     combo.setFixedHeight(28)
 
+    # ✅ [핵심] 드롭다운 팝업의 "네모 프레임/그림자" 제거 (QSS 겹침 방지)
+    popup = combo.view().window()
+    popup.setWindowFlag(Qt.FramelessWindowHint, True)
+    popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
     return combo
 
 
@@ -151,11 +154,13 @@ class AnnotationToolBar(QWidget):
         # =========================
         layout.addWidget(QLabel("도형선:"))
         self.combo_stroke = _create_color_combo(self.tool_state.stroke_color)
+        self.combo_stroke.setObjectName("AnnoStrokeCombo")  # ✅ 추가
         self.combo_stroke.currentTextChanged.connect(self._stroke_color_changed)
         layout.addWidget(self.combo_stroke)
     
         layout.addWidget(QLabel("채움:"))
         self.combo_fill = _create_color_combo(self.tool_state.fill_color or "Yellow")
+        self.combo_fill.setObjectName("AnnoFillCombo")      # ✅ 추가
         self.combo_fill.insertItem(0, "(없음)")
         if self.tool_state.fill_color is None:
             self.combo_fill.setCurrentIndex(0)
@@ -164,11 +169,13 @@ class AnnotationToolBar(QWidget):
     
         layout.addWidget(QLabel("화살표:"))
         self.combo_arrow = _create_color_combo(getattr(self.tool_state, "arrow_color", "Yellow"))
+        self.combo_arrow.setObjectName("AnnoArrowCombo")    # ✅ 추가
         self.combo_arrow.currentTextChanged.connect(self._arrow_color_changed)
         layout.addWidget(self.combo_arrow)
     
         layout.addWidget(QLabel("텍스트:"))
         self.combo_text = _create_color_combo(getattr(self.tool_state, "text_color", "Yellow"))
+        self.combo_text.setObjectName("AnnoTextCombo")      # ✅ 추가
         self.combo_text.currentTextChanged.connect(self._text_color_changed)
         layout.addWidget(self.combo_text)
     

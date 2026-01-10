@@ -62,7 +62,10 @@ def create_color_combo(initial: str = "Red") -> QComboBox:
     # ✅ 폭 제한 제거(잘림 방지)
     combo.setMinimumWidth(120)
     combo.setMaximumWidth(200)
-
+    # ✅ [핵심] 드롭다운 팝업의 "네모 프레임/그림자" 제거
+    popup = combo.view().window()
+    popup.setWindowFlag(Qt.FramelessWindowHint, True)
+    popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
     # ✅ 인라인 setStyleSheet 제거 (QSS 파일에서만 관리)
     return combo
 
@@ -948,7 +951,7 @@ class MainWindow(QMainWindow):
         self.combo_shape_stroke_color.activated.connect(
             lambda *_: self.on_shape_stroke_color_changed(self.combo_shape_stroke_color.currentText())
         )
-
+        self.combo_shape_stroke_color.setObjectName("AnnoStrokeCombo")
         row_style_layout.addWidget(self.combo_shape_stroke_color)
 
         # 도형 채움색 (없음 + 기본 색상) - 아이콘 포함
@@ -971,14 +974,15 @@ class MainWindow(QMainWindow):
 
         # 기본값: 채움 없음
         self.combo_shape_fill_color.setCurrentIndex(0)
-        self.combo_shape_fill_color.setMaximumWidth(80)
+        self.combo_shape_fill_color.setMaximumWidth(200)
+        self.combo_shape_fill_color.setMinimumWidth(120)
         self.combo_shape_fill_color.currentTextChanged.connect(
             self.on_shape_fill_color_changed
         )
         self.combo_shape_fill_color.activated.connect(
             lambda *_: self.on_shape_fill_color_changed(self.combo_shape_fill_color.currentText())
         )
-
+        self.combo_shape_fill_color.setObjectName("AnnoFillCombo")
         row_style_layout.addWidget(self.combo_shape_fill_color)
 
 
@@ -992,7 +996,7 @@ class MainWindow(QMainWindow):
         self.combo_arrow_color.activated.connect(
             lambda *_: self.on_arrow_color_changed(self.combo_arrow_color.currentText())
         )
-
+        self.combo_arrow_color.setObjectName("AnnoArrowCombo")
         row_style_layout.addWidget(self.combo_arrow_color)
 
         # 텍스트 색상
@@ -1005,7 +1009,7 @@ class MainWindow(QMainWindow):
         self.combo_text_color.activated.connect(
             lambda *_: self.on_text_color_changed(self.combo_text_color.currentText())
         )
-
+        self.combo_text_color.setObjectName("AnnoTextCombo")
         row_style_layout.addWidget(self.combo_text_color)
 
         # ← 바로 여기 아래에 글자 크기 추가

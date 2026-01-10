@@ -70,7 +70,7 @@ QPushButton#ResetButton:pressed {
  * MODE 버튼(국지 스코프)
  * - 전역 QPushButton 금지 원칙 유지
  * - objectName=ModePill + property(mode=...) 로만 적용
- * ------------------------------ *
+ * ------------------------------ */
  /* MODE 버튼: QSS 적용 전(네모 기본) 높이에 최대한 가깝게 복구 */
 
  /* MODE 버튼: 입력칸(QLineEdit)과 동일 규격(높이감) */
@@ -218,6 +218,78 @@ QComboBox#PdfLayoutCombo::down-arrow {
 }
 
 
+
+QComboBox#AnnoStrokeCombo,
+QComboBox#AnnoFillCombo,
+QComboBox#AnnoArrowCombo,
+QComboBox#AnnoTextCombo {
+    /* ✅ 크기: 기존 유지 (필요시 숫자만 조정) */
+    min-width: 80px;
+    max-width: 80px;
+
+    min-height: 20px;
+    max-height: 20px;
+
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+
+    background: #FFFFFF;
+    font-weight: 700;
+
+    /* ✅ drop-down(24px) + 여유(10px) = 34px */
+    padding: 4px 34px 4px 10px;
+}
+
+QComboBox#AnnoStrokeCombo::drop-down,
+QComboBox#AnnoFillCombo::drop-down,
+QComboBox#AnnoArrowCombo::drop-down,
+QComboBox#AnnoTextCombo::drop-down {
+    width: 24px;                 /* ✅ PDF(32)처럼 키우지 않음 */
+    border-left: 1px solid #D7DCE6;
+}
+
+QComboBox#AnnoStrokeCombo::down-arrow,
+QComboBox#AnnoFillCombo::down-arrow,
+QComboBox#AnnoArrowCombo::down-arrow,
+QComboBox#AnnoTextCombo::down-arrow {
+    image: url(machining_auto/assets/tools/inverted_triangle_icon.png);
+    width: 14px;                 /* ✅ 툴바용 적정 크기 */
+    height: 9px;
+    margin-top: 1px;
+}
+
+/* =================================================
+ * QComboBox Popup - 정석(QAbstractItemView) 단일 적용
+ * ================================================= */
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 14px;
+    outline: 0;
+    padding: 0px;
+}
+
+QComboBox QAbstractItemView::viewport {
+    background: transparent;
+}
+
+QComboBox QAbstractItemView::item {
+    height: 26px;
+    padding: 2px 10px;
+    margin: 2px 6px;
+    border-radius: 8px;
+    color: #111827;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #F4F7FB;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #E8EEFF;
+    color: #111827;
+}
 
 
 

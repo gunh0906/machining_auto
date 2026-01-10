@@ -938,7 +938,7 @@ def apply_brand_light_theme(app: QApplication) -> None:
                     poly = QPolygonF([p1, p2, p3])
 
                     painter.setPen(Qt.NoPen)
-                    painter.setBrush(QColor("#111827"))
+                    option.palette.color(QPalette.Text)
                     painter.drawPolygon(poly)
                     return
                 finally:
