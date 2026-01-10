@@ -981,11 +981,36 @@ def apply_brand_light_theme(app: QApplication) -> None:
 
 
 def main():
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import Qt
+    from pathlib import Path
+
+    # ✅ 1) 앱 생성
     app = QApplication(sys.argv)
+
+    # ✅ 2) 스플래시 띄우기 (사이드바 로고 재사용)
+    base = Path(__file__).resolve().parent
+    logo_path = base / "assets" / "sidebar" / "Atech_AI.png"
+
+    from machining_auto.splash_screen import AppSplash
+    splash = AppSplash(logo_path=str(logo_path))
+    splash.show()
+    splash.set_progress(5, "앱 초기화 중...")
+
+    # ✅ 3) 테마/QSS 적용
+    splash.set_progress(15, "테마 적용 중...")
     apply_brand_light_theme(app)
 
+    # ✅ 4) 메인 윈도우 생성(여기가 가장 무거움)
+    splash.set_progress(35, "UI 로딩 중 (Setting/CAM)...")
     win = ShellMainWindow()
+
+    # ✅ 5) 표시 직전 마무리
+    splash.set_progress(85, "마무리 중...")
     win.show()
+
+    splash.set_progress(100, "완료")
+    splash.close()
 
     sys.exit(app.exec())
 
