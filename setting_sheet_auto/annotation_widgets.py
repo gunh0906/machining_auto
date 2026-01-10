@@ -133,6 +133,7 @@ class AnnotationToolBar(QWidget):
         # =========================
         layout.addWidget(QLabel("두께:"))
         self.spin_width = QDoubleSpinBox()
+        self.spin_width.setObjectName("AnnoSpinBox")  # ✅ 추가: 두께/크기 스핀 공통 타겟
         self.spin_width.setRange(0.5, 10.0)
         self.spin_width.setSingleStep(0.5)
         self.spin_width.setValue(float(self.tool_state.stroke_width))
@@ -175,6 +176,7 @@ class AnnotationToolBar(QWidget):
     
         layout.addWidget(QLabel("크기:"))
         self.spin_text = QSpinBox()
+        self.spin_text.setObjectName("AnnoSpinBox")   # ✅ 추가: 두께/크기 스핀 공통 타겟
         self.spin_text.setRange(8, 200)
         self.spin_text.setValue(int(getattr(self.tool_state, "text_size", 30)))
         self.spin_text.setFixedHeight(28)

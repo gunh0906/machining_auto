@@ -289,3 +289,190 @@ QComboBox#AnnoArrowCombo  QAbstractItemView::item:selected,
 QComboBox#AnnoTextCombo   QAbstractItemView::item:selected {
     background-color: #E8EEFF;
 }
+
+
+/* =========================================================
+ * INPUTS (ComboBox / SpinBox) — 28px 통일 세트 (최종)
+ * - radius: 8px
+ * - right panel width: 26px
+ * - separator: #D7DCE6
+ * - SpinBox arrows: url(...) 강제
+ * - SpinBox right panel background: transparent (요청사항)
+ * ========================================================= */
+
+/* ---------------------------------------------------------
+ * QComboBox (공통)
+ * --------------------------------------------------------- */
+QComboBox {
+    background: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+
+    min-height: 28px;
+    max-height: 28px;
+
+    padding-left: 10px;
+    padding-right: 30px; /* drop-down 패널 공간 */
+}
+
+
+QComboBox:disabled {
+    background: #F5F6FA;
+    color: #808080;
+    border: 1px solid #E0E4ED;
+}
+
+/* 콤보박스 우측 패널 (콤보는 요청 없으므로 기본 배경 유지) */
+QComboBox::drop-down {
+    width: 26px;
+    background: #F2F4F8;
+    border-left: 1px solid #D7DCE6;
+
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+QComboBox::drop-down:hover {
+    background: rgba(41, 67, 146, 0.10);
+}
+
+QComboBox::down-arrow {
+    width: 8px;
+    height: 8px;
+}
+
+/* 콤보 팝업 리스트 */
+QComboBox QAbstractItemView {
+    background: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+    padding: 4px;
+    outline: 0;
+}
+
+QComboBox QAbstractItemView::item {
+    padding: 6px 10px;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background: rgba(41, 67, 146, 0.12);
+}
+
+/* ---------------------------------------------------------
+ * SpinBox (QSpinBox / QDoubleSpinBox) — 공통
+ * objectName="AnnoSpinBox" 대상
+ * --------------------------------------------------------- */
+QAbstractSpinBox#AnnoSpinBox {
+    background: #FFFFFF;
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+
+    min-height: 28px;
+    max-height: 28px;
+
+    padding-left: 10px;
+    padding-right: 30px; /* up/down 패널 공간 */
+}
+
+QAbstractSpinBox#AnnoSpinBox QLineEdit {
+    background: transparent;
+    border: 0px;
+    padding: 0px;
+}
+
+
+QAbstractSpinBox#AnnoSpinBox:disabled {
+    background: #F5F6FA;
+    color: #808080;
+    border: 1px solid #E0E4ED;
+}
+
+/* ---------------------------------------------------------
+ * SpinBox 우측 패널 (배경 투명 + 구분선만 유지)
+ * --------------------------------------------------------- */
+QAbstractSpinBox#AnnoSpinBox::up-button,
+QAbstractSpinBox#AnnoSpinBox::down-button {
+    width: 26px;
+
+    /* ✅ 요청사항: 화살표 뒤 배경(우측 패널 배경) 제거 */
+    background: transparent;
+
+    /* ✅ 좌측 구분선은 유지 */
+    border-left: 1px solid #D7DCE6;
+}
+
+/* 🔑 겹침 방지: % 금지, px 고정 */
+QAbstractSpinBox#AnnoSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    height: 14px;
+
+    border-top-right-radius: 8px;
+}
+
+QAbstractSpinBox#AnnoSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    height: 14px;
+
+    border-bottom-right-radius: 8px;
+
+    /* ✅ 중앙이 비어 보이는 현상 제거: 위/아래 버튼 경계선 */
+    border-top: 1px solid #D7DCE6;
+}
+
+/* hover 시만 살짝 강조 (배경 제거 요구를 존중하여 hover에서만 표시) */
+QAbstractSpinBox#AnnoSpinBox::up-button:hover,
+QAbstractSpinBox#AnnoSpinBox::down-button:hover {
+    background: rgba(41, 67, 146, 0.08);
+}
+
+/* ---------------------------------------------------------
+ * SpinBox 화살표 (url 이미지 강제)
+ * --------------------------------------------------------- */
+QAbstractSpinBox#AnnoSpinBox::up-arrow {
+    image: url(machining_auto/assets/tools/triangle_icon.png);
+    width: 9px;
+    height: 9px;
+}
+
+QAbstractSpinBox#AnnoSpinBox::down-arrow {
+    image: url(machining_auto/assets/tools/inverted_triangle_icon.png);
+    width: 9px;
+    height: 9px;
+}
+
+/* =========================================================
+ * INPUT TEXT ALIGNMENT — 글씨 크기 확대 + 수직 중앙 정렬
+ * ========================================================= */
+
+/* -------------------------
+ * QComboBox 텍스트
+ * ------------------------- */
+QComboBox {
+    font-size: 14px;          /* ✅ 글씨 약간 키움 */
+    line-height: 20px;        /* ✅ 높이 28px 기준 중앙 */
+    padding-top: 4px;         /* 위/아래 동일 */
+    padding-bottom: 4px;
+}
+
+/* 콤보박스 내부 표시 텍스트 */
+QComboBox QAbstractItemView {
+    font-size: 14px;
+}
+
+/* -------------------------
+ * SpinBox 텍스트 (내부 QLineEdit)
+ * ------------------------- */
+QAbstractSpinBox#AnnoSpinBox QLineEdit {
+    font-size: 14px;          /* ✅ 콤보와 동일 */
+    line-height: 20px;        /* ✅ 수직 중앙 핵심 */
+    padding-top: 0px;
+    padding-bottom: 0px;
+    text-align: center;       /* ✅ 요청: 중앙 정렬 */
+}
+
+/* SpinBox 전체도 중앙 정렬 유지 */
+QAbstractSpinBox#AnnoSpinBox {
+    font-size: 14px;
+}

@@ -964,6 +964,10 @@ class MainWindow(QMainWindow):
         row_style_layout.addWidget(lbl_width)
 
         self.spin_stroke_width = QDoubleSpinBox()
+
+        self.spin_stroke_width.setObjectName("AnnoSpinBox")
+        self.spin_stroke_width.setFixedHeight(28)
+
         self.spin_stroke_width.setRange(0.5, 15.0)
         self.spin_stroke_width.setSingleStep(0.5)
 
@@ -1057,6 +1061,9 @@ class MainWindow(QMainWindow):
         row_style_layout.addWidget(lbl_text_size)
 
         self.spin_text_size = QSpinBox()
+        self.spin_text_size.setObjectName("AnnoSpinBox")
+        self.spin_text_size.setFixedHeight(28)
+
         self.spin_text_size.setRange(6, 72)
         self.spin_text_size.setSingleStep(2)
         self.spin_text_size.setValue(40)
