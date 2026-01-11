@@ -41,7 +41,9 @@ class ShellMainWindow(QMainWindow):
 
         self.setWindowTitle("Machining Auto (Setting + CAM)")
         self.resize(1600, 900)
-        self.setMinimumHeight(900)
+        # ✅ Setting 페이지 초기화가 840으로 복귀할 수 있도록, 쉘 최소높이 고정을 제거/완화
+        # - 과거 '줄어드는 현상 방지' 목적이었으나, 지금 요구사항(초기화 시 원복)과 충돌합니다.
+        self.setMinimumSize(QSize(0, 0))
 
         # ----- 공유 설정 로드 -----
         machines, op_map = load_global_settings()
@@ -143,13 +145,49 @@ class ShellMainWindow(QMainWindow):
         QTimer.singleShot(0, self._install_dpi_diagnostics)
 
     def _enforce_initial_geometry(self):
+        if getattr(self, "_enforced_once", False):
+            return
+        self._enforced_once = True
         """
         프레임리스 + 레이아웃 재계산(DPI/폰트 반영) 후 창이 축소되는 현상을 방지합니다.
         - 시작 크기는 반드시 1600×820 이상을 유지
         - 사용자가 이후 수동으로 키우는 것은 그대로 허용
         """
-        if self.width() < 1600 or self.height() < 820:
-            self.resize(max(self.width(), 1600), max(self.height(), 820))
+        if self.width() < 1600 or self.height() < 840:
+            self.resize(max(self.width(), 1600), max(self.height(), 840))
+    def restore_default_geometry(self):
+        """
+        Setting '초기화'에서 호출되는 쉘 레벨 복귀 함수.
+        - 페이지 내부 레이아웃/뷰 상태와 무관하게, 최상위 창 크기를 확정 복귀한다.
+        """
+        try:
+            target_w = 1600
+            target_h = 840
+
+            # 최소/최대 제한 해제(수축 방해 차단)
+            self.setMinimumSize(QSize(0, 0))
+            self.setMaximumSize(QSize(16777215, 16777215))
+
+            # 레이아웃 확정
+            cw = self.centralWidget()
+            if cw is not None and cw.layout() is not None:
+                cw.layout().activate()
+
+            # 즉시 + 다음 프레임 + 50ms 확정(레이아웃/삭제 반영 타이밍 차단)
+            def _apply():
+                try:
+                    self.resize(target_w, target_h)
+                    if cw is not None and cw.layout() is not None:
+                        cw.layout().activate()
+                    self.updateGeometry()
+                except Exception:
+                    pass
+
+            _apply()
+            QTimer.singleShot(0, _apply)
+            QTimer.singleShot(50, _apply)
+        except Exception:
+            pass
 
     # ============================================================
     # DPI/스크린 이동 진단용(콘솔 출력)

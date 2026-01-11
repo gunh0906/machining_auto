@@ -3,7 +3,7 @@ import sys
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize,QTimer
 from PySide6.QtGui import QPixmap, QTransform, QPainter, QKeySequence, QShortcut, QIcon, QColor, QFont
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QGridLayout, QFrame, QStatusBar, QInputDialog, QTextEdit, QFileDialog,
     QMenuBar, QMenu, QMessageBox, QDialog, QDialogButtonBox, QListWidget,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QDoubleSpinBox,
-    QSpinBox, 
+    QSpinBox, QSizePolicy
 )
 from PySide6.QtCore import QSettings
 
@@ -28,6 +28,7 @@ from .settings_manager import (
     get_operator_for_machine,
 )
 
+from .frameless_text_dialog import FramelessTextDialog
 
 from .annotations import AnnotationSet, Point2D, ShapeType
 from .graphics_annotations import AnnotationScene
@@ -317,7 +318,9 @@ class MainWindow(QMainWindow):
         icon_path = base_dir / "assets" / "SettingSheetTool.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
 
-        self.resize(1200, 800)
+        #"최초 실행 기본 창 크기"
+        self._default_window_size = QSize(1600, 840)
+        self.resize(self._default_window_size)
 
 
         # ─ 주석 도구 상태 (기본값) ─
@@ -609,6 +612,10 @@ class MainWindow(QMainWindow):
 
         self.coord_extra_layout = QVBoxLayout()
         self.coord_extra_layout.setSpacing(2)
+
+        # ✅ 기본 3줄 확보(2~3 원하셨으니 3줄로 설정)
+        #self._coord_reserved = self._init_reserved_rows(self.coord_extra_layout, 1)
+
         op_layout.addLayout(self.coord_extra_layout)
 
         # ─ 외곽 치수 (X/Y) ─
@@ -619,7 +626,17 @@ class MainWindow(QMainWindow):
             outer_margins=SECTION_OUTER_MARGINS,
             outer_spacing=SECTION_SPACING,
         )
-        outer_layout = QGridLayout(outer_body)
+
+        # ✅ (핵심) outer_body의 최상위는 VBox로 두고
+        #    1) 고정 필드(X-/X+/Y-/Y+)는 Grid 위젯으로
+        #    2) 추가 치수 컨테이너는 VBox에 "직접" 붙인다 (Z와 동일한 높이 반영 패턴)
+        outer_root = QVBoxLayout(outer_body)
+        outer_root.setContentsMargins(0, 0, 0, 0)
+        outer_root.setSpacing(SECTION_SPACING)
+
+        # ─ 1) 고정 필드 영역(Grid) ─
+        outer_fixed = QWidget()
+        outer_layout = QGridLayout(outer_fixed)
         outer_layout.setContentsMargins(0, 0, 0, 0)     # ✅ 중복 패딩 제거
         outer_layout.setHorizontalSpacing(8)            # ✅ 좌우 필드 간격
         outer_layout.setVerticalSpacing(FORM_V_SPACING) # ✅ 행 간격
@@ -649,15 +666,22 @@ class MainWindow(QMainWindow):
 
         outer_sep = QWidget()
         outer_sep.setFixedHeight(1)
-        outer_sep.setProperty("divider", "true")  # ✅ QSS로 통일 (인라인 색상 고정 제거)
+        outer_sep.setProperty("divider", "true")
         outer_layout.addWidget(outer_sep, 4, 0, 1, 4)
 
-        self.outer_extra_layout = QVBoxLayout()
-        self.outer_extra_layout.setSpacing(2)
-        outer_extra_row = QWidget()
-        outer_extra_row_layout = QHBoxLayout(outer_extra_row)
-        outer_extra_row_layout.setContentsMargins(0, 4, 0, 0)
-        outer_extra_row_layout.setSpacing(4)
+        outer_root.addWidget(outer_fixed)
+
+        # ─ 2) 외곽 추가치수 컨테이너 (Z 정보와 동일 패턴) ─
+        outer_extra_container = QWidget()
+        self.outer_extra_container = outer_extra_container  # ✅ add 시 geometry 갱신용 참조
+
+        outer_extra_container_layout = QVBoxLayout(outer_extra_container)
+        outer_extra_container_layout.setContentsMargins(0, 4, 0, 0)
+        outer_extra_container_layout.setSpacing(2)
+
+        # 상단: "추가 치수:" + + 버튼
+        outer_extra_top = QHBoxLayout()
+        outer_extra_top.setSpacing(4)
 
         btn_outer_add = QPushButton("")
         btn_outer_add.setObjectName("addOuterButton")
@@ -669,12 +693,25 @@ class MainWindow(QMainWindow):
         btn_outer_add.setToolTip("외곽 관련 치수 항목 추가")
         btn_outer_add.clicked.connect(self.add_outer_dimension)
 
-        outer_extra_row_layout.addWidget(QLabel("추가 치수:"))
-        outer_extra_row_layout.addStretch(1)
-        outer_extra_row_layout.addWidget(btn_outer_add)
+        outer_extra_top.addWidget(QLabel("추가 치수:"))
+        outer_extra_top.addStretch(1)
+        outer_extra_top.addWidget(btn_outer_add)
 
-        outer_layout.addLayout(self.outer_extra_layout, 5, 0, 1, 4)
-        outer_layout.addWidget(outer_extra_row, 6, 0, 1, 4)
+        outer_extra_container_layout.addLayout(outer_extra_top)
+
+        # 하단: 실제 추가 치수 row들이 쌓이는 영역
+        self.outer_extra_layout = QVBoxLayout()
+        self.outer_extra_layout.setSpacing(2)
+
+        # ✅ 시작 예약 1칸 확보 (Z와 동일)
+        #self._outer_reserved = self._init_reserved_rows(self.outer_extra_layout, 1)
+
+        outer_extra_container_layout.addLayout(self.outer_extra_layout)
+
+        # ✅ 중요: Grid(row 5)에 넣지 말고, outer_root(VBox)에 직접 추가
+        outer_extra_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        outer_root.addWidget(outer_extra_container)
+
 
         # ─ Z 정보 ─
         z_group = QGroupBox("Z 정보")
@@ -729,6 +766,7 @@ class MainWindow(QMainWindow):
 
         z_extra_layout_container.addLayout(z_extra_top)
         self.z_extra_layout = QVBoxLayout()
+        #self._z_reserved = self._init_reserved_rows(self.z_extra_layout, 1)
         self.z_extra_layout.setSpacing(2)
         z_extra_layout_container.addLayout(self.z_extra_layout)
         z_form.addRow(z_extra_container)
@@ -747,19 +785,16 @@ class MainWindow(QMainWindow):
 
         self.notes_edit = QTextEdit()
         self.notes_edit.setPlaceholderText("현장 특이사항, 주의사항 등을 자유롭게 입력하십시오.")
-        self.notes_edit.setMinimumHeight(80)
+        self.notes_edit.setMinimumHeight(50)
+        # ✅ 특이사항: 초기화/기본 화면에서 과도한 세로 확장 방지
+
         notes_layout.addWidget(self.notes_edit)
 
         left_layout.addWidget(self.operator_group)
         left_layout.addWidget(outer_group)
         left_layout.addWidget(z_group)
+        left_layout.addWidget(notes_group) 
 
-        # ✅ 남는 공간은 특이사항 "위"에서만 흡수 (특이사항 아래 여백 증가 방지)
-        left_layout.addStretch(1)
-
-        left_layout.addWidget(notes_group)
-
-        
         # ─ 우측 : A4 프레임 (이미지 + 치수 표기) ─
         right_group = QGroupBox("A4 프레임 (이미지 + 치수 표기)")
         right_group.setObjectName("PanelRight")  # ✅ 우측 카드 패널
@@ -811,19 +846,11 @@ class MainWindow(QMainWindow):
         self.combo_pdf_layout = QComboBox()
         self.combo_pdf_layout.setObjectName("PdfLayoutCombo")  # ✅ QSS 타겟팅용
         self.combo_pdf_layout.addItems(["세로", "가로"])
-
-        # ❌ self.combo_pdf_layout.setFixedWidth(80)
-        # ✅ 드롭다운/텍스트가 잘리지 않도록 최소 폭 확보
         self.combo_pdf_layout.setMinimumWidth(90)
         self.combo_pdf_layout.setMaximumWidth(140)
         self.combo_pdf_layout.setToolTip("PDF 출력 레이아웃을 선택합니다.")
-        popup = self.combo_pdf_layout.view().window()
-        popup.setWindowFlag(Qt.FramelessWindowHint, True)
-        popup.setWindowFlag(Qt.NoDropShadowWindowHint, True)
-        popup.setObjectName("ComboPopup")
-        popup.setAttribute(Qt.WA_TranslucentBackground, True)
-
         img_top_layout.addWidget(self.combo_pdf_layout)
+
         right_layout.addWidget(img_top)
 
         # 중간: 주석 도구 바 (도형 + 화살표/텍스트 + 두께/색상)
@@ -1117,6 +1144,11 @@ class MainWindow(QMainWindow):
 
         self._load_ui_settings()
 
+        # ✅ 최초 렌더링(폰트/QSS 반영) 이후 baseline 확정
+        self._baseline_size = None
+        def _capture_baseline():
+            self._baseline_size = self.size()
+        QTimer.singleShot(0, _capture_baseline)
 
 
     def on_select_shape_tool(self, shape_type: ShapeType):
@@ -1478,9 +1510,19 @@ class MainWindow(QMainWindow):
     def _clear_layout(self, layout):
         while layout.count():
             item = layout.takeAt(0)
+
             w = item.widget()
             if w is not None:
                 w.deleteLater()
+                continue
+
+            child_layout = item.layout()
+            if child_layout is not None:
+                self._clear_layout(child_layout)
+                continue
+
+            # spacerItem()은 takeAt으로 빠지면 자동 해제되므로 별도 처리 불필요
+
 
     # ───────── 초기화 ─────────
     def reset_all(self):
@@ -1533,8 +1575,14 @@ class MainWindow(QMainWindow):
         self._clear_layout(self.outer_extra_layout)
         self._clear_layout(self.z_extra_layout)
 
-        # 특이사항 초기화
-        self.notes_edit.clear()
+        # 특이사항 초기화 (✅ 위젯 삭제/미생성 방지)
+        if hasattr(self, "notes_edit") and self.notes_edit is not None:
+            try:
+                self.notes_edit.clear()
+            except RuntimeError:
+                # 이미 삭제된 경우: 다음 초기화 사이클에서 재생성/재부착으로 복구
+                pass
+
 
         # 계산 반영
         self._update_outer_info()
@@ -1584,7 +1632,18 @@ class MainWindow(QMainWindow):
         # PDF 레이아웃은 초기화 시 기본값으로
         if hasattr(self, "combo_pdf_layout") and self.combo_pdf_layout is not None:
             self.combo_pdf_layout.setCurrentText("세로")
-  
+        # ✅ 초기화는 "최초 실행 기본 크기(1600x840)"로 강제 복귀 (강제 수축 버전)
+
+        # ✅ 통합 쉘에서 실행 중이면, 쉘이 창 크기 복귀를 책임진다.
+        try:
+            top = self.window()
+            if top is not None and hasattr(top, "restore_default_geometry"):
+                top.restore_default_geometry()
+        except Exception:
+            pass
+
+
+
     # ───────── 외곽 → 센터/길이 계산 ─────────
     def _update_outer_info(self):
         # X축
@@ -1669,40 +1728,76 @@ class MainWindow(QMainWindow):
     def _auto_grow_window_height(self, add_px: int = 48):
         """
         동적 행(추가 좌표/치수) 추가 시, 최상위 창 높이를 자동으로 늘립니다.
-        - 가로는 절대 줄이지 않습니다(폭 축소 방지).
-        - 스크롤 없이 “예전처럼 창이 늘어나는” 동작을 재현합니다.
+        - 폭은 유지(강제 확대 금지)
         """
         top = self.window()
         if top is None:
             return
 
-        # ✅ 현재 폭을 먼저 고정(최소 폭 이하로 내려가지 않게)
-        keep_w = top.width()
-        if keep_w < 1600:
-            keep_w = 1600
-
-        # ✅ adjustSize() 호출 금지: sizeHint 재계산으로 폭이 줄어드는 원인
-        new_h = top.height() + int(add_px)
-
-        # ✅ 폭은 유지, 높이만 증가
+        keep_w = top.width()                 # ✅ 현재 폭 유지
+        new_h = top.height() + int(add_px)   # ✅ 높이만 증가
         top.resize(keep_w, new_h)
+
+    def _init_reserved_rows(self, layout, count: int):
+        """
+        동적 입력 영역의 기본 공간을 확보하기 위한 '보이는' placeholder 행 생성.
+        - 기존 QSpacerItem은 외곽 치수처럼 타이트한 영역에서 체감이 약하여,
+        고정 높이 QWidget을 넣어 확실히 1칸이 보이도록 함.
+        """
+        placeholders = []
+        for _ in range(int(count)):
+            ph = QWidget()
+            ph.setObjectName("ReservedPlaceholder")
+            ph.setFixedHeight(28)
+            # 배경을 따로 칠하지 않아도 빈 줄로 공간이 보입니다.
+            layout.addWidget(ph)
+            placeholders.append(ph)
+        return placeholders
+
+    def _consume_reserved_row(self, layout, placeholders, row_widget) -> bool:
+        """
+        placeholder(보이는 빈 줄)이 남아 있으면 1개를 실제 row_widget으로 치환한다.
+        - 성공 시 True(창 크기 증가 불필요)
+        - 실패 시 False(예약 없음 → 창 크기 증가 대상)
+        """
+        if not placeholders:
+            return False
+
+        ph = placeholders.pop(0)
+
+        # 레이아웃에서 해당 placeholder의 인덱스를 찾아 제거 후 그 자리에 위젯 삽입
+        for i in range(layout.count()):
+            it = layout.itemAt(i)
+            w = it.widget() if it else None
+            if w is ph:
+                layout.takeAt(i)
+                ph.deleteLater()
+                layout.insertWidget(i, row_widget)
+                return True
+
+        # 혹시 못 찾으면 안전하게 끝에 추가
+        layout.addWidget(row_widget)
+        return True
 
 
     # ───────── 추가 좌표 ─────────
     def add_coord_point(self):
-        title, ok = QInputDialog.getText(
-            self, "추가 좌표 이름",
-            "좌표 이름 또는 설명을 입력하십시오:"
+        title, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="좌표 이름 또는 설명을 입력하십시오:",
+            placeholder="예: 좌측 기준, 클램프 여유",
         )
         if not ok or not title.strip():
             return
 
-        value, ok = QInputDialog.getText(
-            self, "추가 좌표 값",
-            "좌표 값 또는 표시 텍스트를 입력하십시오:"
+        value, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="좌표 값 또는 표시 텍스트를 입력하십시오:",
+            placeholder="예: 12.5 또는 '가공 기준'",
         )
         if not ok or not value.strip():
             return
+
 
         row = QWidget()
         row_layout = QHBoxLayout(row)
@@ -1725,26 +1820,35 @@ class MainWindow(QMainWindow):
         row_layout.addWidget(edit)
         row_layout.addStretch(1)
 
+        # 기존:
+        # self.coord_extra_layout.addWidget(row)
+        # self._auto_grow_window_height(70)
+
         self.coord_extra_layout.addWidget(row)
         self._auto_grow_window_height(70)
+
 
 
     # ───────── 외곽 추가 치수 ─────────
 
     def add_outer_dimension(self):
-        title, ok = QInputDialog.getText(
-            self, "외곽 추가 치수 제목",
-            "치수 제목을 입력하십시오 (예: 클램프 여유, 좌측 여유 등):"
+
+        title, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="치수 제목을 입력하십시오 (예: 클램프 여유, 좌측 여유 등):",
+            placeholder="예: 클램프 여유",
         )
         if not ok or not title.strip():
             return
 
-        value, ok = QInputDialog.getText(
-            self, "외곽 추가 치수 값",
-            "치수 값을 입력하십시오 (mm):"
+        value, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="치수 값을 입력하십시오:",
+            placeholder="예: 3.0",
         )
         if not ok or not value.strip():
             return
+
 
         row = QWidget()
         row_layout = QHBoxLayout(row)
@@ -1765,25 +1869,35 @@ class MainWindow(QMainWindow):
         row_layout.addWidget(edit)
         row_layout.addStretch(1)
 
+          # ✅ 예약칸 제거 정책: 바로 추가
         self.outer_extra_layout.addWidget(row)
         self._auto_grow_window_height(70)
+
+        # ✅ (안전장치) 외곽 영역 지오메트리 재계산 유도
+        if hasattr(self, "outer_extra_container") and self.outer_extra_container is not None:
+            self.outer_extra_container.updateGeometry()
+            self.outer_extra_container.adjustSize()
 
     # ───────── Z 추가 치수 ─────────
 
     def add_z_dimension(self):
-        title, ok = QInputDialog.getText(
-            self, "Z 추가 치수 제목",
-            "치수 제목을 입력하십시오 (예: 상판 여유, 하부 베이스 두께 등):"
+
+        title, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="치수 제목을 입력하십시오 (예: 상판 여유, 하부 베이스 두께 등):",
+            placeholder="예: 상판 여유",
         )
         if not ok or not title.strip():
             return
 
-        value, ok = QInputDialog.getText(
-            self, "Z 추가 치수 값",
-            "치수 값을 입력하십시오 (mm):"
+        value, ok = FramelessTextDialog.get_text(
+            self,
+            prompt="치수 값을 입력하십시오:",
+            placeholder="예: 2.5",
         )
         if not ok or not value.strip():
             return
+
 
         row = QWidget()
         row_layout = QHBoxLayout(row)
@@ -1806,6 +1920,8 @@ class MainWindow(QMainWindow):
 
         self.z_extra_layout.addWidget(row)
         self._auto_grow_window_height(70)
+
+
 
     # ───────── 이미지 파일 불러오기 ─────────
     def load_image_file(self):

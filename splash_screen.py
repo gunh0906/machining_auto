@@ -1,22 +1,11 @@
 # machining_auto/splash_screen.py
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, QRect
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QProgressBar,
-    QTextEdit,
-)
-
-from PySide6.QtCore import Qt, QRect
-from PySide6.QtGui import QPainter, QPen, QColor, QFontMetrics
-from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QPixmap, QPainter, QPen, QColor, QFontMetrics
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 
 class InsetProgressBar(QWidget):

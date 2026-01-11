@@ -164,60 +164,6 @@ QPushButton#PdfButton:pressed {
     background: #7F1D1D;
     border-color: #7F1D1D;
 }
-/* =================================================
- * PDF 레이아웃 콤보박스(세로/가로)
- * - PdfButton / ModePill 과 동일 크기·모양
- * - ▼(역삼각형) 표시를 위해 drop-down 폭 + padding-right 확보
- * - 색상 변경 없음(기본 입력 스타일과 동일 톤)
- * ================================================= */
- /* PDF 레이아웃 콤보박스 - ProxyStyle ▼ 호환 정석 */
-
-/* =========================================
- * PDF 레이아웃 콤보 ▼ (이미지 없이 도형)
- * ========================================= */
-
- /* PDF 레이아웃 콤보 - ▼는 ProxyStyle이 그림: 공간만 확보 */
-QComboBox#PdfLayoutCombo {
-    border: 1px solid #D7DCE6;
-    border-radius: 8px;
-
-    min-height: 28px;
-    max-height: 28px;
-
-    /* ▼ 영역 확보 */
-    padding: 4px 42px 4px 10px;
-
-    background: #FFFFFF;
-    color: #111827;
-    font-weight: 700;
-}
-
-/* styles/90_experimental.qss (또는 20_inputs_safe.qss)에 추가) */
-
-QComboBox#PdfLayoutCombo {
-    border: 1px solid #D7DCE6;
-    border-radius: 8px;
-    min-height: 28px;
-    max-height: 28px;
-    padding: 4px 42px 4px 10px;   /* ▼ 공간 */
-    background: #FFFFFF;
-    
-    font-weight: 700;
-}
-
-QComboBox#PdfLayoutCombo::drop-down {
-    width: 32px;
-    border-left: 1px solid #D7DCE6;
-}
-
-QComboBox#PdfLayoutCombo::down-arrow {
-    image: url(machining_auto/assets/tools/inverted_triangle_icon.png);
-    width: 18px;
-    height: 12px;
-    margin-top: 1px;             /* 수직 중앙 미세 보정 */
-}
-
-
 
 QComboBox#AnnoStrokeCombo,
 QComboBox#AnnoFillCombo,
@@ -475,4 +421,62 @@ QAbstractSpinBox#AnnoSpinBox QLineEdit {
 /* SpinBox 전체도 중앙 정렬 유지 */
 QAbstractSpinBox#AnnoSpinBox {
     font-size: 14px;
+}
+
+/* =========================================================
+ * PdfLayoutCombo — AnnoStrokeCombo 세트 그대로 복제
+ * (단, PDF 크기/폭만 유지)
+ * ========================================================= */
+QComboBox#PdfLayoutCombo {
+    /* ✅ PDF 콤보 전용 크기 */
+    min-height: 28px;
+    max-height: 28px;
+
+    border: 1px solid #D7DCE6;
+    border-radius: 8px;
+
+    background: #FFFFFF;
+    color: #111827;
+    font-weight: 700;
+
+    /* ✅ drop-down(32px) + 여유(10px) = 42px */
+    padding: 4px 42px 4px 10px;
+}
+
+QComboBox#PdfLayoutCombo::drop-down {
+    width: 32px;
+    border-left: 1px solid #D7DCE6;
+
+    /* (선택) 우측 패널 라운드가 필요하면 아래 2줄 사용
+       border-top-right-radius: 8px;
+       border-bottom-right-radius: 8px;
+    */
+}
+
+QComboBox#PdfLayoutCombo::down-arrow {
+    image: url(machining_auto/assets/tools/inverted_triangle_icon.png);
+    width: 18px;
+    height: 12px;
+    margin-top: 1px;  /* 수직 중앙 미세 보정 */
+}
+
+/* ✅ 아래 콤보(AnnoStrokeCombo)와 “아이템뷰 처리 방식” 동일 */
+QComboBox#PdfLayoutCombo QAbstractItemView {
+    background: transparent;
+    border: none;
+    outline: 0;
+    border-radius: 8px;
+}
+
+QComboBox#PdfLayoutCombo QAbstractItemView::viewport {
+    background: transparent;
+}
+
+QComboBox#PdfLayoutCombo QAbstractItemView::item {
+    padding: 6px 10px;
+    background: transparent;
+}
+
+QComboBox#PdfLayoutCombo QAbstractItemView::item:selected {
+    background-color: #E8EEFF;
 }
