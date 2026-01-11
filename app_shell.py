@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QTimer, QEvent, QPointF
-from PySide6.QtGui import QIcon, QPainter, QPolygonF, QColor
+from PySide6.QtGui import QIcon, QPainter, QPolygonF, QColor, QCursor
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QToolButton, QButtonGroup, QStackedWidget, QMenuBar, QMenu, QMessageBox, QFrame, QProxyStyle, QStyle
@@ -38,6 +38,18 @@ class ShellMainWindow(QMainWindow):
 
         # ✅ 드래그 이동용 변수
         self._drag_pos = None
+        # ✅ 리사이즈 커서 히스테리시스(전환이 너무 빠른 문제 완화)
+        self._cursor_edge_last = None
+
+        # ✅ 리사이즈 커서 fail-safe (MouseMove 누락 시에도 커서 원복)
+        self._cursor_reset_timer = QTimer(self)
+        self._cursor_reset_timer.setSingleShot(True)
+        self._cursor_reset_timer.timeout.connect(self._maybe_unset_resize_cursor)
+
+        # ✅ 리사이즈(외곽 드래그)용 상태
+        self._resize_edge = None
+        self._resize_margin = 12  # 외곽 감지 두께(px)
+        self._moving = False
 
         self.setWindowTitle("Machining Auto (Setting + CAM)")
         self.resize(1600, 900)
@@ -81,14 +93,26 @@ class ShellMainWindow(QMainWindow):
         self.stack = QStackedWidget()
         vright.addWidget(self.stack, 1)
 
-
-
         hroot.addWidget(right, 1)
 
         self.setCentralWidget(central)
+        # ✅ 커서(리사이즈) 갱신을 이벤트 대상 위젯에 의존하지 않도록 전역 이벤트 필터 설치
+        self.installEventFilter(self)
+        # ✅ 자식 위젯에서 발생하는 MouseMove도 잡기 위해 필터를 전파 설치
+        central.installEventFilter(self)
+        right.installEventFilter(self)
+        self.topbar.installEventFilter(self)
+        self.stack.installEventFilter(self)
+        self.sidebar.installEventFilter(self)
 
-
-
+        # ✅ 마우스 버튼을 누르지 않아도 move 이벤트를 받기 위해 필수
+        self.setMouseTracking(True)
+        central.setMouseTracking(True)
+        right.setMouseTracking(True)
+        self.topbar.setMouseTracking(True)
+        self.stack.setMouseTracking(True)
+        self.sidebar.setMouseTracking(True)
+       
         # ----- 페이지 구성 -----
         self.page_setting = SettingMainWindow()
 
@@ -144,6 +168,7 @@ class ShellMainWindow(QMainWindow):
         # ✅ DPI/스크린 이동 진단(모니터 이동 시 들쑥날쑥 원인 확정용)
         QTimer.singleShot(0, self._install_dpi_diagnostics)
 
+       
     def _enforce_initial_geometry(self):
         if getattr(self, "_enforced_once", False):
             return
@@ -247,7 +272,6 @@ class ShellMainWindow(QMainWindow):
                 f"[DPI] {reason} | "
                 f"win={geo.width()}x{geo.height()} pos=({pos.x()},{pos.y()}) | screen=None"
             )
-
     def _install_dpi_diagnostics(self):
         """
         show 이후 windowHandle/screenChanged가 유효해지는 시점에 신호 연결 및 초기 덤프를 수행합니다.
@@ -271,27 +295,87 @@ class ShellMainWindow(QMainWindow):
         except Exception as e:
             print(f"[DPI] installEventFilter failed: {e}")
 
+    def _maybe_unset_resize_cursor(self):
+        """
+        커서 원복을 '무조건' 하지 않고,
+        현재 마우스가 창 외곽 리사이즈 영역이면 유지합니다.
+        """
+        try:
+            gp = QCursor.pos()
+            lp = self.mapFromGlobal(gp)
+            edge = self._hit_test_resize_edge(lp)
+            if edge:
+                # 외곽에 있으면 유지(원복 금지)
+                self._update_resize_cursor(edge)
+                return
+        except Exception:
+            pass
+
+        self._cursor_edge_last = None
+        self.unsetCursor()
+
+
     def eventFilter(self, obj, event):
         """
-        DPI/스크린 이동 관련 이벤트를 가로채 콘솔로 출력합니다.
+        프레임리스 쉘의 이벤트 필터
+        1) 리사이즈 커서 갱신(히스테리시스 + fail-safe)
+        2) DPI/스크린 이동 진단(콘솔 출력)
         """
         try:
             et = event.type()
 
+            # ============================================================
+            # ✅ 리사이즈 커서 갱신(히스테리시스 + fail-safe)
+            # ============================================================
+            if et == QEvent.Type.MouseMove:
+                # 드래그(이동/리사이즈) 중에는 커서 갱신 고정
+                try:
+                    if hasattr(event, "buttons") and (event.buttons() & Qt.LeftButton):
+                        return super().eventFilter(obj, event)
+                except Exception:
+                    pass
+
+                gp = QCursor.pos()
+                lp = self.mapFromGlobal(gp)
+                edge = self._hit_test_resize_edge(lp)
+
+                self._update_resize_cursor(edge)
+                self._cursor_edge_last = edge
+
+                # ✅ 일정 시간 동안 후속 MouseMove가 없으면 커서 원복
+                t = getattr(self, "_cursor_reset_timer", None)
+                if t is not None:
+                    t.start(250)
+
+                return super().eventFilter(obj, event)
+
+            if et == QEvent.Type.Leave:
+                self._cursor_edge_last = None
+                try:
+                    t = getattr(self, "_cursor_reset_timer", None)
+                    if t is not None:
+                        t.stop()
+                except Exception:
+                    pass
+                self.unsetCursor()
+                return super().eventFilter(obj, event)
+
+            # ============================================================
+            # DPI/스크린 이동 관련 이벤트(기존 진단 로직 유지)
+            # ============================================================
             if et == QEvent.Type.ScreenChangeInternal:
                 self._dpi_dump("event:ScreenChangeInternal")
             elif et == QEvent.Type.DpiChange:
                 self._dpi_dump("event:DpiChange")
             elif et == QEvent.Type.Resize:
-                # 리사이즈는 너무 많이 뜰 수 있으니 핵심만
                 self._dpi_dump("event:Resize")
             elif et == QEvent.Type.Move:
                 self._dpi_dump("event:Move")
+
         except Exception:
             pass
 
         return super().eventFilter(obj, event)
-
 
     # -------------------------
     # 상단 메뉴바(공유)
@@ -425,14 +509,46 @@ class ShellMainWindow(QMainWindow):
 
         h1.addWidget(self.menubar, 1)
         h1.addStretch(1)
+        # 우측 버튼들(먼저 생성 후 add)
+        from PySide6.QtGui import QIcon
+        from pathlib import Path
+
+        tools_dir = Path(__file__).resolve().parent / "assets" / "tools"
+
+        btn_min = QPushButton("")
+        btn_min.setFixedSize(28, 28)
+        btn_min.setToolTip("최소화")
+        btn_min.setObjectName("MinimizePill")
+        btn_min.clicked.connect(self.minimize_window)
+        try:
+            ico = QIcon(str(tools_dir / "win_minimize.png"))
+            btn_min.setIcon(ico)
+            btn_min.setIconSize(QSize(14, 14))
+        except Exception:
+            pass
+
+        btn_max = QPushButton("")
+        btn_max.setFixedSize(28, 28)
+        btn_max.setToolTip("최대화/복귀")
+        btn_max.setObjectName("MaximizePill")
+        btn_max.clicked.connect(self.toggle_maximize)
+        try:
+            ico = QIcon(str(tools_dir / "win_maximize.png"))
+            btn_max.setIcon(ico)
+            btn_max.setIconSize(QSize(14, 14))
+        except Exception:
+            pass
 
         btn_close = QPushButton("✕")
         btn_close.setFixedSize(28, 28)
         btn_close.setToolTip("닫기")
         btn_close.clicked.connect(self.close)
         btn_close.setObjectName("ClosePill")
-        # ✅ 변경 전: h1.addWidget(btn_close)
-        h1.addWidget(btn_close, 0, Qt.AlignVCenter)  # ← 세로 중앙 정렬 고정
+
+        h1.addWidget(btn_min, 0, Qt.AlignVCenter)
+        h1.addWidget(btn_max, 0, Qt.AlignVCenter)
+        h1.addWidget(btn_close, 0, Qt.AlignVCenter)
+
 
         v.addWidget(row1)
 
@@ -853,32 +969,171 @@ class ShellMainWindow(QMainWindow):
             self.page_cam.rotate_on = bool(checked)
         except Exception:
             pass
+
+    def _update_resize_cursor(self, edge: str | None):
+        """
+        edge에 따라 마우스 커서 모양을 변경합니다.
+        """
+        if not edge:
+            self.unsetCursor()
+            return
+
+        if edge in ("left", "right"):
+            self.setCursor(Qt.SizeHorCursor)
+        elif edge in ("top", "bottom"):
+            self.setCursor(Qt.SizeVerCursor)
+        elif edge in ("top-left", "bottom-right"):
+            self.setCursor(Qt.SizeFDiagCursor)
+        elif edge in ("top-right", "bottom-left"):
+            self.setCursor(Qt.SizeBDiagCursor)
+        else:
+            self.unsetCursor()
+
+    def _hit_test_resize_edge(self, pos):
+        """
+        프레임리스 리사이즈 히트테스트(안정형).
+        - 모서리(대각선) 우선
+        - 그 다음 변(edge) 판정
+        """
+        x = int(pos.x())
+        y = int(pos.y())
+        w = int(self.width())
+        h = int(self.height())
+        m = int(getattr(self, "_resize_margin", 12))
+
+        # 방어
+        if w <= 0 or h <= 0:
+            return None
+
+        near_left = x <= m
+        near_right = x >= (w - 1 - m)
+        near_top = y <= m
+        near_bottom = y >= (h - 1 - m)
+
+        # 1) 모서리 우선
+        if near_top and near_left:
+            return "top-left"
+        if near_top and near_right:
+            return "top-right"
+        if near_bottom and near_left:
+            return "bottom-left"
+        if near_bottom and near_right:
+            return "bottom-right"
+
+        # 2) 변(edge) 판정
+        #    (전하 요구: 좌/우는 반드시 가로 커서, 상/하는 세로 커서)
+        if near_left:
+            return "left"
+        if near_right:
+            return "right"
+        if near_top:
+            return "top"
+        if near_bottom:
+            return "bottom"
+
+        return None
+
     def mousePressEvent(self, event):
         """
-        프레임리스 창에서 상단 영역 드래그 이동을 가능하게 합니다.
+        프레임리스 창 마우스 눌림 처리
+        - 최대화 상태: edge 리사이즈 금지(윈도우 밖으로 튀는 문제 방지)
+        - 비최대화: edge면 리사이즈, 아니면 드래그 이동
         """
-        if event.button() == Qt.LeftButton:
+        if event.button() != Qt.LeftButton:
+            super().mousePressEvent(event)
+            return
+
+        # ✅ 최대화 상태에서는 edge 리사이즈 진입 금지 (이동만 허용)
+        if self.isMaximized():
+            self._resize_edge = None
             self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
+            return
+
+        # ✅ edge 판정은 전역 마우스 기준으로 통일(커서/리사이즈 판정 불일치 방지)
+        edge = None
+        try:
+            gp = QCursor.pos()
+            lp = self.mapFromGlobal(gp)
+            edge = self._hit_test_resize_edge(lp)
+        except Exception:
+            edge = None
+
+        if edge:
+            # 리사이즈 시작
+            self._resize_edge = edge
+            self._drag_pos = event.globalPosition().toPoint()
         else:
-            super().mousePressEvent(event)
+            # 이동 시작
+            self._resize_edge = None
+            self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+
+        event.accept()
+
 
     def mouseMoveEvent(self, event):
-        """
-        프레임리스 창 드래그 이동
-        """
-        if self._drag_pos is not None and event.buttons() & Qt.LeftButton:
+        # ✅ 최대화 상태에서는 어떤 리사이즈도 금지(최대화보다 더 커지는 문제 차단)
+        if self.isMaximized() and self._resize_edge is not None:
+            event.accept()
+            return
+
+        if self._resize_edge is not None and (event.buttons() & Qt.LeftButton):
+            delta = event.globalPosition().toPoint() - self._drag_pos
+            geo = self.geometry()
+
+            min_w = 1200
+            min_h = 700
+
+            if "right" in self._resize_edge:
+                geo.setWidth(max(min_w, geo.width() + delta.x()))
+            if "bottom" in self._resize_edge:
+                geo.setHeight(max(min_h, geo.height() + delta.y()))
+            if "left" in self._resize_edge:
+                new_left = geo.left() + delta.x()
+                if geo.right() - new_left >= min_w:
+                    geo.setLeft(new_left)
+            if "top" in self._resize_edge:
+                new_top = geo.top() + delta.y()
+                if geo.bottom() - new_top >= min_h:
+                    geo.setTop(new_top)
+
+            self.setGeometry(geo)
+            self._drag_pos = event.globalPosition().toPoint()
+            event.accept()
+            return
+
+        # 3) 이동 드래그(리사이즈가 아닌 경우만)
+        if self._drag_pos is not None and (event.buttons() & Qt.LeftButton):
             self.move(event.globalPosition().toPoint() - self._drag_pos)
             event.accept()
-        else:
-            super().mouseMoveEvent(event)
+            return
+
+        super().mouseMoveEvent(event)
+
+
 
     def mouseReleaseEvent(self, event):
-        """
-        드래그 종료
-        """
+        self._resize_edge = None
         self._drag_pos = None
         super().mouseReleaseEvent(event)
+
+    def toggle_maximize(self):
+        """
+        프레임리스 창 최대화/복귀 토글
+        """
+        try:
+            if self.isMaximized():
+                self.showNormal()
+            else:
+                self.showMaximized()
+        except Exception:
+            pass
+
+    def minimize_window(self):
+        try:
+            self.showMinimized()
+        except Exception:
+            pass
 
 # ===============================
 # QSS Loader / Theme (전역 단일 적용)

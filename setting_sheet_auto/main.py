@@ -784,6 +784,8 @@ class MainWindow(QMainWindow):
         notes_layout.setSpacing(SECTION_SPACING)
 
         self.notes_edit = QTextEdit()
+        # ✅ 최대화/동적추가 시 특이사항이 화면을 과점유하지 않도록 상한 설정
+        self.notes_edit.setMaximumHeight(220)
         self.notes_edit.setPlaceholderText("현장 특이사항, 주의사항 등을 자유롭게 입력하십시오.")
         self.notes_edit.setMinimumHeight(50)
         # ✅ 특이사항: 초기화/기본 화면에서 과도한 세로 확장 방지
@@ -1728,15 +1730,29 @@ class MainWindow(QMainWindow):
     def _auto_grow_window_height(self, add_px: int = 48):
         """
         동적 행(추가 좌표/치수) 추가 시, 최상위 창 높이를 자동으로 늘립니다.
-        - 폭은 유지(강제 확대 금지)
+
+        ✅ 규칙
+        - 통합 쉘이 최대화 상태면 창 크기 조정 금지(최대화 밖으로 튀는 문제 방지)
+        - resize는 딱 1회만 수행(중복/선행 resize 금지)
         """
         top = self.window()
         if top is None:
             return
 
-        keep_w = top.width()                 # ✅ 현재 폭 유지
-        new_h = top.height() + int(add_px)   # ✅ 높이만 증가
-        top.resize(keep_w, new_h)
+        try:
+            if hasattr(top, "isMaximized") and callable(top.isMaximized) and top.isMaximized():
+                # 최대화 상태에서는 창을 키우지 않는다.
+                return
+        except Exception:
+            pass
+
+        try:
+            keep_w = int(top.width())
+            new_h = int(top.height()) + int(add_px)
+            top.resize(keep_w, new_h)
+        except Exception:
+            pass
+
 
     def _init_reserved_rows(self, layout, count: int):
         """

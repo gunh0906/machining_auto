@@ -46,11 +46,15 @@ QToolButton#SideIcon:checked {
     border: 1px solid rgba(255,255,255,0.22);
 }
 
-/* Close button (X) */
+/* Titlebar window buttons (Min / Max / Close) */
+QPushButton#MinimizePill,
+QPushButton#MaximizePill,
 QPushButton#ClosePill {
     background: #2B4292;
     border: 1px solid #2B4292;
-    border-radius: 12px;
+
+    /* ✅ 라운드 과함 완화 (28x28 기준) */
+    border-radius: 6px;
 
     min-width: 28px;
     min-height: 28px;
@@ -59,31 +63,28 @@ QPushButton#ClosePill {
 
     color: #FFFFFF;
     font-weight: 900;
+    /* ✅ 내부 아이콘/문자 표시를 위로 당김 */
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
 
-    /* 기존 */
-    padding: 0px;
-    text-align: center;
-
-    /* ===== (B) X 버튼 글리프 베이스라인 보정 ===== */
-    line-height: 28px;     /* 글자 세로 중앙 고정 */
-    margin-top: -1px;      /* 아래로 처져 보이는 현상 보정 */
-    /* ============================================ */
 }
 
-QWidget#TopBar QMenuBar::item {
-    padding-top: 4px;
-    padding-bottom: 4px;
-}
-
-
+QPushButton#MinimizePill:hover,
+QPushButton#MaximizePill:hover,
 QPushButton#ClosePill:hover {
     background: #1F347A;
     border-color: #1F347A;
 }
+
+QPushButton#MinimizePill:pressed,
+QPushButton#MaximizePill:pressed,
 QPushButton#ClosePill:pressed {
     background: #16285C;
     border-color: #16285C;
 }
+
 
 /* ROTATE pill */
 QPushButton#RotatePill {
